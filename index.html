@@ -22,7 +22,7 @@
             <h1 class="text-2xl font-bold text-blue-400 flex items-center gap-2">
                 <i class="fa-solid fa-chart-line"></i> Swing Scanner & AI 미장 터미널 Pro
             </h1>
-            <p class="text-xs text-slate-400 mt-1">이동평균선·ATR 기반 스윙 스캐너 + 환율·세금 AI 시뮬레이터 통합</p>
+            <p class="text-xs text-slate-400 mt-1">이동평균선·ATR 기반 스윙 스캐너 + 자동 기록 저장 및 AI 시뮬레이터</p>
         </div>
         <div class="flex items-center gap-3">
             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -73,7 +73,7 @@
         <div class="card p-4">
             <div class="text-xs text-slate-400 flex justify-between">
                 <span>스윙 스캐너 상태</span>
-                <span class="text-purple-400 font-bold" id="kpi-scan-count">포착 종목 - 개</span>
+                <span class="text-purple-400 font-bold" id="kpi-scan-count">포착 종목 0개</span>
             </div>
             <div class="text-sm font-semibold text-white mt-2 flex justify-between">
                 <span>추세 정배열: 20/60MA</span>
@@ -85,25 +85,28 @@
         </div>
     </div>
 
-    <!-- SWING SCANNER & TICKER INPUT SECTION -->
+    <!-- SWING SCANNER & TICKER INPUT SECTION WITH LOCALSTORAGE RECORDING -->
     <section class="card p-5 border-emerald-500/30">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
             <div>
                 <h2 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
                     <i class="fa-solid fa-crosshairs"></i> Swing Scanner 분석 및 보유 종목 매도 가이드
                 </h2>
-                <p class="text-xs text-slate-400">티커를 공백이나 쉼표로 구분해 입력 후 스캔 버튼을 누르세요. (예: NVDA AAPL 005930 TSLA)</p>
+                <p class="text-xs text-slate-400">티커와 평단가는 브라우저에 자동 저장되어 다음에 접속해도 유지됩니다.</p>
             </div>
             <div class="flex gap-2 w-full md:w-auto">
-                <button onclick="runSwingScanner()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 w-full md:w-auto justify-center">
-                    <i class="fa-solid fa-bolt"></i> 스윙 분석 실행
+                <button onclick="resetInputs()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-xs font-bold transition">
+                    <i class="fa-solid fa-rotate-left"></i> 초기화
+                </button>
+                <button onclick="runSwingScanner()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
+                    <i class="fa-solid fa-bolt"></i> 스윙 분석 실행 & 저장
                 </button>
             </div>
         </div>
 
         <!-- Ticker Input Area -->
         <div class="mb-4">
-            <input type="text" id="ticker-input" value="NVDA AAPL 005930 TSLA MSFT" placeholder="티커 입력 (예: NVDA AAPL 005930)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+            <input type="text" id="ticker-input" value="BTC-USD NVDA AAPL 005930 TSLA 000660" placeholder="티커 입력 (예: BTC-USD NVDA AAPL 005930)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
         </div>
 
         <div class="overflow-x-auto">
@@ -226,4 +229,316 @@
                     </h3>
                     <div class="flex flex-col items-center justify-center h-44">
                         <div class="text-4xl font-extrabold text-amber-400 mb-2">18.45</div>
-                        <p class="text-xs text-slate-400
+                        <p class="text-xs text-slate-400 text-center">현재 시장: <span class="text-emerald-400 font-bold">중립적 안정</span></p>
+                        <div class="w-full bg-slate-700 h-3 rounded-full mt-4 relative overflow-hidden">
+                            <div class="bg-gradient-to-r from-emerald-500 via-amber-500 to-red-500 h-full"></div>
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1">공포 (0) ------------------- 중립 ------------------- 탐욕 (100)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="card p-5 border-blue-500/30">
+                <h2 class="text-md font-bold text-blue-400 flex items-center gap-2 mb-3">
+                    <i class="fa-solid fa-robot"></i> AI 미장 브리핑 & 액션
+                </h2>
+                <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+                    <div class="p-3 bg-slate-800/60 rounded-lg border border-slate-700">
+                        <strong class="text-emerald-400 block mb-1">💡 AI 환율 대응 전략</strong>
+                        원/달러 환율이 상승 구간에 진입함에 따라, **환노출형 미국 빅테크 ETF**의 원화 평가 수익률이 우수합니다.
+                    </div>
+                    <div class="p-3 bg-slate-800/60 rounded-lg border border-slate-700">
+                        <strong class="text-amber-400 block mb-1">🌙 야간 변동성 스탑로스 가이드</strong>
+                        스윙 스캐너가 포착한 종목의 경우 **ATR 1.8배 하단 손절선**을 미리 걸어두는 것을 권장합니다.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Master Database for Swing Analysis
+        const stockDB = {
+            'BTC-USD': { mkt: 'CRYPTO', name: '비트코인', close: 64200, atr: 1850, ma20: 62000, ma60: 58000, volSpike: 1.9 },
+            'NVDA': { mkt: 'US', name: '엔비디아', close: 128.5, atr: 4.2, ma20: 122.0, ma60: 115.0, volSpike: 1.8 },
+            'AAPL': { mkt: 'US', name: '애플', close: 224.2, atr: 3.5, ma20: 220.0, ma60: 212.0, volSpike: 1.2 },
+            '005930': { mkt: 'KR', name: '삼성전자', close: 78500, atr: 1400, ma20: 77000, ma60: 75000, volSpike: 1.6 },
+            'TSLA': { mkt: 'US', name: '테슬라', close: 248.0, atr: 11.0, ma20: 230.0, ma60: 210.0, volSpike: 2.1 },
+            'MSFT': { mkt: 'US', name: '마이크로소프트', close: 448.5, atr: 6.5, ma20: 440.0, ma60: 425.0, volSpike: 1.7 },
+            '000660': { mkt: 'KR', name: 'SK하이닉스', close: 225000, atr: 5200, ma20: 220000, ma60: 205000, volSpike: 1.9 }
+        };
+
+        function updateTime() {
+            const now = new Date();
+            const timeEl = document.getElementById('current-time');
+            if (timeEl) timeEl.innerText = 'KST ' + now.toLocaleString('ko-KR');
+        }
+        setInterval(updateTime, 1000);
+
+        function saveEntriesToStorage() {
+            const tickerVal = document.getElementById('ticker-input').value;
+            localStorage.setItem('saved_tickers', tickerVal);
+
+            const entries = {};
+            const inputs = document.querySelectorAll('input[id^="entry-"]');
+            inputs.forEach(input => {
+                const ticker = input.getAttribute('data-ticker');
+                if (ticker && input.value) {
+                    entries[ticker] = input.value;
+                }
+            });
+            localStorage.setItem('saved_entries', JSON.stringify(entries));
+        }
+
+        function loadEntriesFromStorage() {
+            const savedTickers = localStorage.getItem('saved_tickers');
+            if (savedTickers) {
+                document.getElementById('ticker-input').value = savedTickers;
+            }
+        }
+
+        function resetInputs() {
+            localStorage.removeItem('saved_tickers');
+            localStorage.removeItem('saved_entries');
+            document.getElementById('ticker-input').value = 'BTC-USD NVDA AAPL 005930 TSLA 000660';
+            runSwingScanner();
+        }
+
+        function runSwingScanner() {
+            const inputVal = document.getElementById('ticker-input').value;
+            const tickers = inputVal.toUpperCase().split(/[\s,]+/).filter(t => t.trim() !== '');
+            const tbody = document.getElementById('swing-table-body');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+            let foundCount = 0;
+
+            const savedEntries = JSON.parse(localStorage.getItem('saved_entries') || '{}');
+
+            tickers.forEach((t, idx) => {
+                let item = stockDB[t];
+                if (!item) {
+                    const isKR = /^\d{6}$/.test(t);
+                    item = {
+                        mkt: isKR ? 'KR' : 'US',
+                        name: t,
+                        close: isKR ? 50000 : 100.0,
+                        atr: isKR ? 1000 : 2.5,
+                        ma20: isKR ? 49000 : 98.0,
+                        ma60: isKR ? 47000 : 92.0,
+                        volSpike: 1.6
+                    };
+                }
+
+                const isCand = (item.ma20 > item.ma60) && (item.close > item.ma20) && (item.volSpike >= 1.5);
+                if (isCand) foundCount++;
+
+                const stopDist = 1.8 * item.atr;
+                const stopPrice = item.close - stopDist;
+                const targetPrice = item.close + (stopDist * 2);
+
+                let currFmt = '$' + item.close.toFixed(2);
+                let stopFmt = '$' + stopPrice.toFixed(2);
+                let targetFmt = '$' + targetPrice.toFixed(2);
+
+                if (item.mkt === 'KR') {
+                    currFmt = '₩' + Math.round(item.close).toLocaleString();
+                    stopFmt = '₩' + Math.round(stopPrice).toLocaleString();
+                    targetFmt = '₩' + Math.round(targetPrice).toLocaleString();
+                } else if (item.mkt === 'CRYPTO') {
+                    currFmt = '$' + Math.round(item.close).toLocaleString();
+                    stopFmt = '$' + Math.round(stopPrice).toLocaleString();
+                    targetFmt = '$' + Math.round(targetPrice).toLocaleString();
+                }
+
+                const savedEntryVal = savedEntries[t] || '';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2.5"><span class="px-1.5 py-0.5 rounded text-[10px] ${item.mkt === 'KR' ? 'bg-red-500/20 text-red-400' : (item.mkt === 'CRYPTO' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400')}">${item.mkt}</span></td>
+                    <td class="p-2.5 font-bold text-white">${t}</td>
+                    <td class="p-2.5 text-slate-300">${item.name}</td>
+                    <td class="p-2.5">${isCand ? '<span class="text-emerald-400 font-bold">🟢 O (포착)</span>' : '<span class="text-slate-500">⚪ X</span>'}</td>
+                    <td class="p-2.5 font-semibold text-white">${currFmt}</td>
+                    <td class="p-2.5 text-red-400">${stopFmt}</td>
+                    <td class="p-2.5 text-emerald-400">${targetFmt}</td>
+                    <td class="p-2.5"><input type="number" id="entry-${idx}" data-ticker="${t}" value="${savedEntryVal}" placeholder="평단가" oninput="calcSellSignal(${idx}, ${item.close})" class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"></td>
+                    <td class="p-2.5 font-bold" id="signal-${idx}">-</td>
+                `;
+                tbody.appendChild(tr);
+
+                if (savedEntryVal) {
+                    calcSellSignal(idx, item.close);
+                }
+            });
+
+            const kpiCount = document.getElementById('kpi-scan-count');
+            if (kpiCount) kpiCount.innerText = `포착 종목 ${foundCount}개`;
+
+            saveEntriesToStorage();
+        }
+
+        function calcSellSignal(idx, currentClose) {
+            const entryInput = document.getElementById(`entry-${idx}`);
+            const sigTd = document.getElementById(`signal-${idx}`);
+            if (!entryInput || !sigTd) return;
+
+            const entryVal = entryInput.value;
+            if (!entryVal || entryVal <= 0) {
+                sigTd.innerHTML = '-';
+                saveEntriesToStorage();
+                return;
+            }
+
+            const entry = parseFloat(entryVal);
+            const profitPct = ((currentClose - entry) / entry) * 100;
+
+            if (profitPct <= -5) {
+                sigTd.innerHTML = `<span class="text-red-400">🔴 SELL (${profitPct.toFixed(1)}%)</span>`;
+            } else if (profitPct >= 15) {
+                sigTd.innerHTML = `<span class="text-emerald-400">🟢 TAKE (${profitPct.toFixed(1)}%)</span>`;
+            } else {
+                sigTd.innerHTML = `<span class="text-slate-300">⚪ HOLD (${profitPct.toFixed(1)}%)</span>`;
+            }
+
+            saveEntriesToStorage();
+        }
+
+        let simChart = null, marketChart = null, yieldCurveChart = null;
+
+        function updateSimInputs() {
+            const capital = parseInt(document.getElementById('input-capital').value);
+            const tech = parseInt(document.getElementById('input-tech').value);
+            const fx = parseInt(document.getElementById('input-fx').value);
+            const loss = parseInt(document.getElementById('input-loss').value);
+
+            document.getElementById('val-capital').innerText = '$ ' + capital.toLocaleString();
+            document.getElementById('val-tech').innerText = tech + ' %';
+            document.getElementById('val-fx').innerText = fx.toLocaleString() + ' KRW';
+            document.getElementById('val-loss').innerText = '₩ ' + loss.toLocaleString();
+
+            runSimulation();
+        }
+
+        function runSimulation() {
+            const capital = parseInt(document.getElementById('input-capital').value);
+            const tech = parseInt(document.getElementById('input-tech').value) / 100;
+            const fx = parseInt(document.getElementById('input-fx').value);
+            const loss = parseInt(document.getElementById('input-loss').value);
+
+            const currentFx = 1385.5;
+            const expectedReturnRate = (tech * 0.18) + ((1 - tech) * 0.06);
+            const months = [0, 3, 6, 9, 12];
+            
+            const usdValues = months.map(m => capital * Math.pow(1 + expectedReturnRate / 12, m));
+            const krwValues = usdValues.map(v => v * fx);
+
+            const finalUsd = usdValues[usdValues.length - 1];
+            const finalKrw = krwValues[krwValues.length - 1];
+            const fxImpact = (finalUsd * fx) - (finalUsd * currentFx);
+
+            const profitKrw = (finalUsd - capital) * fx;
+            const taxableProfit = Math.max(0, profitKrw - 2500000 - loss);
+            const tax = taxableProfit * 0.22;
+
+            document.getElementById('res-total-krw').innerText = '₩ ' + Math.round(finalKrw).toLocaleString();
+            document.getElementById('res-fx-impact').innerText = (fxImpact >= 0 ? '+ ₩ ' : '- ₩ ') + Math.abs(Math.round(fxImpact)).toLocaleString();
+            document.getElementById('res-final-tax').innerText = '₩ ' + Math.round(tax).toLocaleString();
+
+            const chartData = krwValues.map(v => Math.round(v / 10000));
+
+            if (simChart && typeof simChart.update === 'function') {
+                simChart.data.datasets[0].data = chartData;
+                simChart.update();
+            } else {
+                const ctxSim = document.getElementById('simChart');
+                if (ctxSim && typeof Chart !== 'undefined') {
+                    simChart = new Chart(ctxSim.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: ['현재', '3개월 후', '6개월 후', '9개월 후', '12개월 후'],
+                            datasets: [{
+                                label: 'AI 예상 자산 추이 (만 원)',
+                                data: chartData,
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { labels: { color: '#94a3b8' } } },
+                            scales: {
+                                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        window.onload = function () {
+            updateTime();
+            loadEntriesFromStorage();
+            runSwingScanner();
+
+            if (typeof Chart !== 'undefined') {
+                const ctxMarket = document.getElementById('marketChart');
+                if (ctxMarket) {
+                    marketChart = new Chart(ctxMarket.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: ['월', '화', '수', '목', '금', '오늘(야간)'],
+                            datasets: [{
+                                label: 'S&P 500 (원화 환산)',
+                                data: [5100, 5120, 5090, 5150, 5180, 5210],
+                                borderColor: '#3b82f6',
+                                tension: 0.3,
+                                fill: false
+                            }, {
+                                label: 'S&P 500 (달러 기준)',
+                                data: [5100, 5110, 5070, 5120, 5140, 5160],
+                                borderColor: '#94a3b8',
+                                borderDash: [5, 5],
+                                tension: 0.3,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { labels: { color: '#94a3b8' } } },
+                            scales: {
+                                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                            }
+                        }
+                    });
+                }
+
+                const ctxYield = document.getElementById('yieldCurveChart');
+                if (ctxYield) {
+                    yieldCurveChart = new Chart(ctxYield.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: ['2년물', '10년물', '30년물'],
+                            datasets: [{
+                                label: '국채 금리 (%)',
+                                data: [4.62, 4.22, 4.38],
+                                borderColor: '#f59e0b',
+                                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                fill: true,
+                                tension: 0.2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba
