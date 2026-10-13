@@ -3,372 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>US Market AI & Swing Scanner Pro - KOR Edition</title>
+    <title>Wall Street Swing Trading Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, sans-serif; }
-        .card { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; }
-        input[type=range] { accent-color: #3b82f6; width: 100%; cursor: pointer; }
+        body { background-color: #0b0f19; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .card { background: #151d30; border: 1px solid #232d45; border-radius: 12px; }
+        .glow-green { box-shadow: 0 0 12px rgba(16, 185, 129, 0.2); }
+        .glow-red { box-shadow: 0 0 12px rgba(239, 68, 68, 0.2); }
     </style>
 </head>
-<body class="p-4 md:p-6 space-y-6">
+<body class="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
 
     <!-- Header -->
-    <header class="flex flex-col md:flex-row justify-between items-start md:items-center card p-4 gap-4">
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center card p-5 gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-blue-400 flex items-center gap-2">
-                <i class="fa-solid fa-chart-line"></i> Swing Scanner & AI 미장 터미널 Pro
-            </h1>
-            <p class="text-xs text-slate-400 mt-1">이동평균선·ATR 기반 스윙 스캐너 + 자동 기록 저장 및 AI 시뮬레이터</p>
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30">2주 ~ 2개월 관점</span>
+                <h1 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-amber-400"></i> 월스트리트 스윙 트레이딩 터미널
+                </h1>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">모멘텀 정배열 · 눌림목 타점 · 손절/목표가 자동 매도 가이드</p>
         </div>
         <div class="flex items-center gap-3">
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-ping"></span>
-                실시간 야간 프림마켓 동작 중
-            </span>
             <span class="text-xs text-slate-400" id="current-time"></span>
+            <button id="btn-reset" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition">
+                <i class="fa-solid fa-rotate-left mr-1"></i> 초기화
+            </button>
         </div>
     </header>
 
-    <!-- Top KPI Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Top Status Summary Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="card p-4">
+            <div class="text-xs text-slate-400 flex justify-between">
+                <span>시장 모멘텀 상태</span>
+                <span class="text-emerald-400 font-bold">강세 유효</span>
+            </div>
+            <div class="text-xl font-bold text-emerald-400 mt-2 flex items-center gap-2">
+                <i class="fa-solid fa-arrow-trend-up"></i> 주도주 랠리 국면
+            </div>
+            <div class="text-[11px] text-slate-400 mt-2">빅테크/신고가 영역 눌림목 매수 유효</div>
+        </div>
+
+        <div class="card p-4">
+            <div class="text-xs text-slate-400 flex justify-between">
+                <span>스캔 완료 종목</span>
+                <span class="text-blue-400 font-bold" id="kpi-total-count">0개</span>
+            </div>
+            <div class="text-xl font-bold text-white mt-2" id="kpi-signal-summary">
+                <span class="text-emerald-400">0 O</span> / <span class="text-amber-400">0 △</span> / <span class="text-red-400">0 X</span>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-2">추세 정배열 및 수급량 종합 평가</div>
+        </div>
+
         <div class="card p-4">
             <div class="text-xs text-slate-400 flex justify-between">
                 <span>원/달러 환율 (USD/KRW)</span>
                 <span class="text-emerald-400 font-bold">+0.42%</span>
             </div>
-            <div class="text-2xl font-bold text-white mt-2">1,385.50 KRW</div>
-            <div class="mt-2 text-xs text-slate-400 flex justify-between">
-                <span>AI 환율전망: <strong class="text-blue-400">단기 상방 압력</strong></span>
-                <span>적정 환헤지 비중: <strong class="text-amber-400">35%</strong></span>
-            </div>
+            <div class="text-xl font-bold text-white mt-2">1,385.50 KRW</div>
+            <div class="text-[11px] text-slate-400 mt-2">환노출 스윙 자산 원화 평가 우수</div>
         </div>
 
         <div class="card p-4">
             <div class="text-xs text-slate-400 flex justify-between">
-                <span>2026 양도소득세 추정액</span>
-                <span class="text-slate-400">공제: 250만 원</span>
+                <span>리스크 관리 원칙</span>
+                <span class="text-red-400 font-bold">Stop-Loss 엄수</span>
             </div>
-            <div class="text-2xl font-bold text-amber-400 mt-2">₩ 1,420,000</div>
-            <div class="mt-2 text-xs text-slate-400 flex justify-between">
-                <span>AI 절세 가이드:</span>
-                <span class="text-emerald-400 underline cursor-pointer">손실확정 시뮬레이션 지원</span>
-            </div>
-        </div>
-
-        <div class="card p-4">
-            <div class="text-xs text-slate-400 flex justify-between">
-                <span>야간 시차 리스크 지수</span>
-                <span class="text-blue-400">안정성 78%</span>
-            </div>
-            <div class="text-2xl font-bold text-emerald-400 mt-2">LOW RISK</div>
-            <div class="mt-2 text-xs text-slate-400">
-                AI 변동성 조기경보: <span class="text-slate-200">주요 지수 하방 리스크 제한적</span>
-            </div>
-        </div>
-
-        <div class="card p-4">
-            <div class="text-xs text-slate-400 flex justify-between">
-                <span>스윙 스캐너 상태</span>
-                <span class="text-purple-400 font-bold" id="kpi-scan-count">포착 종목 0개</span>
-            </div>
-            <div class="text-sm font-semibold text-white mt-2 flex justify-between">
-                <span>추세 정배열: 20/60MA</span>
-                <span>ATR 멀티플: 1.8x</span>
-            </div>
-            <div class="w-full bg-slate-700 h-2 rounded-full mt-2 overflow-hidden flex">
-                <div class="bg-emerald-500 h-full" style="width: 75%"></div>
-            </div>
+            <div class="text-xl font-bold text-amber-400 mt-2">-5% 이탈 시 칼손절</div>
+            <div class="text-[11px] text-slate-400 mt-2">역배열 급락주 떨어지는 칼날 진입 금지</div>
         </div>
     </div>
 
-    <!-- SWING SCANNER & TICKER INPUT SECTION -->
-    <section class="card p-5 border-emerald-500/30">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
-            <div>
-                <h2 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
-                    <i class="fa-solid fa-crosshairs"></i> Swing Scanner 분석 및 보유 종목 매도 가이드
-                </h2>
-                <p class="text-xs text-slate-400">티커와 평단가는 브라우저에 자동 저장되어 다음에 접속해도 유지됩니다.</p>
+    <!-- Ticker Input Control Bar -->
+    <section class="card p-4">
+        <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
+            <div class="w-full md:w-3/4 flex gap-2 items-center">
+                <i class="fa-solid fa-magnifying-glass text-slate-400 ml-2"></i>
+                <input type="text" id="ticker-input" value="BTC-USD NVDA AAPL 005930 TSLA 000660" placeholder="분석할 종목/티커 입력 (예: BTC-USD NVDA AAPL 005930)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
             </div>
-            <div class="flex gap-2 w-full md:w-auto">
-                <button type="button" id="btn-reset" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-xs font-bold transition">
-                    <i class="fa-solid fa-rotate-left"></i> 초기화
-                </button>
-                <button type="button" id="btn-scan" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
-                    <i class="fa-solid fa-bolt"></i> 스윙 분석 실행 & 저장
-                </button>
-            </div>
+            <button id="btn-scan" class="w-full md:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-bolt"></i> 스윙 타점 재분석
+            </button>
         </div>
+    </section>
 
-        <!-- Ticker Input Area -->
-        <div class="mb-4">
-            <input type="text" id="ticker-input" value="BTC-USD NVDA AAPL 005930 TSLA 000660" placeholder="티커 입력 (예: BTC-USD NVDA AAPL 005930)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+    <!-- Main Table Container -->
+    <main class="card overflow-hidden">
+        <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-blue-400"></i> 스윙 포착 종목 및 내 평단가 매도 가이드
+            </h2>
+            <span class="text-[11px] text-slate-400">* 평단가를 입력하면 실시간 익절/손절 알림이 표시됩니다.</span>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-xs text-left text-slate-300">
-                <thead class="bg-slate-800/80 text-slate-400 border-b border-slate-700">
+            <table class="w-full text-xs text-left">
+                <thead class="bg-slate-900/80 text-slate-400 border-b border-slate-800">
                     <tr>
-                        <th class="p-2.5">시장</th>
-                        <th class="p-2.5">티커</th>
-                        <th class="p-2.5">종목명</th>
-                        <th class="p-2.5">스윙 신호</th>
-                        <th class="p-2.5">현재가</th>
-                        <th class="p-2.5">손절가 (Stop)</th>
-                        <th class="p-2.5">목표가 (Target)</th>
-                        <th class="p-2.5">평단가 입력</th>
-                        <th class="p-2.5">매도 판단</th>
+                        <th class="p-3">구분</th>
+                        <th class="p-3">종목명 (티커)</th>
+                        <th class="p-3">현재 추세 상태</th>
+                        <th class="p-3">현재가</th>
+                        <th class="p-3">매수 타점 (눌림목)</th>
+                        <th class="p-3 text-emerald-400">목표가 (+기대치)</th>
+                        <th class="p-3 text-red-400">손절가 / 무효화</th>
+                        <th class="p-3">내 평단가</th>
+                        <th class="p-3">매도 판단</th>
                     </tr>
                 </thead>
-                <tbody id="swing-table-body" class="divide-y divide-slate-800">
-                    <!-- Dynamic Rows -->
+                <tbody id="swing-table-body" class="divide-y divide-slate-800/60 text-slate-200">
+                    <!-- Dynamic Table Rows -->
                 </tbody>
             </table>
         </div>
-    </section>
+    </main>
 
-    <!-- MAIN INTERACTIVE AI SIMULATOR SECTION -->
-    <section class="card p-5 border-blue-500/40">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-2">
-            <div>
-                <h2 class="text-lg font-bold text-blue-400 flex items-center gap-2">
-                    <i class="fa-solid fa-calculator"></i> AI 포트폴리오 & 환율·세금 통합 시뮬레이터
-                </h2>
-                <p class="text-xs text-slate-400">슬라이더를 조작하면 하단 실시간 계산 지표가 적용됩니다.</p>
-            </div>
+    <!-- Simple Trading Strategy Tip Footer -->
+    <footer class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        <div class="card p-4 border-l-4 border-emerald-500">
+            <h3 class="font-bold text-emerald-400 mb-1">🟢 주도주 눌림목 전략 (BTC, AAPL)</h3>
+            <p class="text-slate-400">강한 우상향 추세 종목은 20일 이동평균선 눌림목 구간에서 분할 매수로 접근합니다.</p>
         </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="space-y-4 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                <h3 class="text-sm font-bold text-slate-200 border-b border-slate-700 pb-2">⚙️ 변수 설정 (Parameters)</h3>
-                <div>
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="text-slate-400">초기 투자금 (USD)</span>
-                        <span class="text-blue-400 font-bold" id="val-capital">$ 50,000</span>
-                    </div>
-                    <input type="range" id="input-capital" min="5000" max="200000" step="5000" value="50000">
-                </div>
-                <div>
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="text-slate-400">빅테크/스윙 비중 (%)</span>
-                        <span class="text-amber-400 font-bold" id="val-tech">50 %</span>
-                    </div>
-                    <input type="range" id="input-tech" min="10" max="90" step="5" value="50">
-                </div>
-                <div>
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="text-slate-400">목표 시점 원/달러 환율</span>
-                        <span class="text-emerald-400 font-bold" id="val-fx">1,350 KRW</span>
-                    </div>
-                    <input type="range" id="input-fx" min="1200" max="1550" step="10" value="1350">
-                </div>
-                <div>
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="text-slate-400">절세용 실현 손실액 (KRW)</span>
-                        <span class="text-purple-400 font-bold" id="val-loss">₩ 1,000,000</span>
-                    </div>
-                    <input type="range" id="input-loss" min="0" max="5000000" step="250000" value="1000000">
-                </div>
-            </div>
-
-            <div class="lg:col-span-2 space-y-4 flex flex-col justify-center">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
-                    <div class="p-4 bg-slate-800/80 rounded-lg border border-slate-700">
-                        <div class="text-xs text-slate-400">예상 평가 자산 (원화)</div>
-                        <div class="text-xl font-bold text-blue-400 mt-2" id="res-total-krw">₩ 0</div>
-                    </div>
-                    <div class="p-4 bg-slate-800/80 rounded-lg border border-slate-700">
-                        <div class="text-xs text-slate-400">환차손익 영향액</div>
-                        <div class="text-xl font-bold text-amber-400 mt-2" id="res-fx-impact">₩ 0</div>
-                    </div>
-                    <div class="p-4 bg-slate-800/80 rounded-lg border border-slate-700">
-                        <div class="text-xs text-slate-400">절세 적용 후 세금</div>
-                        <div class="text-xl font-bold text-emerald-400 mt-2" id="res-final-tax">₩ 0</div>
-                    </div>
-                </div>
-            </div>
+        <div class="card p-4 border-l-4 border-amber-500">
+            <h3 class="font-bold text-amber-400 mb-1">🟡 실적 모멘텀 전략 (NVDA, TSLA)</h3>
+            <p class="text-slate-400">실적 발표 및 이벤트 직전 변동성이 커질 수 있으므로 박스권 하단 매수 후 실적 직전 익절합니다.</p>
         </div>
-    </section>
+        <div class="card p-4 border-l-4 border-red-500">
+            <h3 class="font-bold text-red-400 mb-1">🔴 역배열 관망 전략 (005930, 000660)</h3>
+            <p class="text-slate-400">외국인 순매도 및 역배열 급락주는 하락이 멈추기 전까지 진입 금지(확인 필요)가 원칙입니다.</p>
+        </div>
+    </footer>
 
     <script>
-        const stockDB = {
-            'BTC-USD': { mkt: 'CRYPTO', name: '비트코인', close: 64200, atr: 1850, ma20: 62000, ma60: 58000, volSpike: 1.9 },
-            'NVDA': { mkt: 'US', name: '엔비디아', close: 128.5, atr: 4.2, ma20: 122.0, ma60: 115.0, volSpike: 1.8 },
-            'AAPL': { mkt: 'US', name: '애플', close: 224.2, atr: 3.5, ma20: 220.0, ma60: 212.0, volSpike: 1.2 },
-            '005930': { mkt: 'KR', name: '삼성전자', close: 78500, atr: 1400, ma20: 77000, ma60: 75000, volSpike: 1.6 },
-            'TSLA': { mkt: 'US', name: '테슬라', close: 248.0, atr: 11.0, ma20: 230.0, ma60: 210.0, volSpike: 2.1 },
-            '000660': { mkt: 'KR', name: 'SK하이닉스', close: 225000, atr: 5200, ma20: 220000, ma60: 205000, volSpike: 1.9 }
+        // Preset Report Data
+        const masterReportDB = {
+            'BTC-USD': { mkt: 'CRYPTO', name: '비트코인', price: 83123, trend: '단기 횡보 우상향', buyRange: '$81,000 ~ $81,500', target: '$92,000 (+12%)', stop: '$79,500 이탈 시', status: 'PASS' },
+            'NVDA': { mkt: 'US', name: '엔비디아', price: 227.27, trend: '단기 우상향 유지', buyRange: '$215 ~ $220', target: '$243.00 (+10%)', stop: '$205.00 이탈 시', status: 'PASS' },
+            'AAPL': { mkt: 'US', name: '애플', price: 343.93, trend: '강한 우상향 (신고가)', buyRange: '$335 ~ $340', target: '$365.00 (+7%)', stop: '$328.00 이탈 시', status: 'PASS' },
+            '005930': { mkt: 'KR', name: '삼성전자', price: 232000, trend: '단기 급락 / 역배열', buyRange: '확인 필요 (관망)', target: '265,000원 (반등)', stop: '215,000원 이탈 시', status: 'HOLD' },
+            'TSLA': { mkt: 'US', name: '테슬라', price: 374.86, trend: '중기 박스권 횡보', buyRange: '$355 ~ $360', target: '$410.00 (+12%)', stop: '$345.00 이탈 시', status: 'PASS' },
+            '000660': { mkt: 'KR', name: 'SK하이닉스', price: 1443000, trend: '단기 급락 / 추세이탈', buyRange: '확인 필요 (관망)', target: '1,650,000원', stop: '1,350,000원 이탈 시', status: 'FAIL' }
         };
 
-        function saveEntriesToStorage() {
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').innerText = 'KST ' + now.toLocaleString('ko-KR');
+        }
+        setInterval(updateTime, 1000);
+
+        function saveStorage() {
             const tickerVal = document.getElementById('ticker-input').value;
-            localStorage.setItem('saved_tickers', tickerVal);
+            localStorage.setItem('swing_tickers', tickerVal);
 
             const entries = {};
-            const inputs = document.querySelectorAll('input[id^="entry-"]');
-            inputs.forEach(input => {
-                const ticker = input.getAttribute('data-ticker');
-                if (ticker && input.value) {
-                    entries[ticker] = input.value;
-                }
+            document.querySelectorAll('input[id^="entry-"]').forEach(input => {
+                const t = input.getAttribute('data-ticker');
+                if (t && input.value) entries[t] = input.value;
             });
-            localStorage.setItem('saved_entries', JSON.stringify(entries));
+            localStorage.setItem('swing_entries', JSON.stringify(entries));
         }
 
-        function runSwingScanner() {
+        function loadStorage() {
+            const savedTickers = localStorage.getItem('swing_tickers');
+            if (savedTickers) document.getElementById('ticker-input').value = savedTickers;
+        }
+
+        function renderTable() {
             const inputVal = document.getElementById('ticker-input').value;
             const tickers = inputVal.toUpperCase().split(/[\s,]+/).filter(t => t.trim() !== '');
             const tbody = document.getElementById('swing-table-body');
-            if (!tbody) return;
-
             tbody.innerHTML = '';
-            let foundCount = 0;
-            const savedEntries = JSON.parse(localStorage.getItem('saved_entries') || '{}');
+
+            const savedEntries = JSON.parse(localStorage.getItem('swing_entries') || '{}');
+            let passCount = 0, holdCount = 0, failCount = 0;
 
             tickers.forEach((t, idx) => {
-                let item = stockDB[t];
+                let item = masterReportDB[t];
                 if (!item) {
                     const isKR = /^\d{6}$/.test(t);
                     item = {
                         mkt: isKR ? 'KR' : 'US',
                         name: t,
-                        close: isKR ? 50000 : 100.0,
-                        atr: isKR ? 1000 : 2.5,
-                        ma20: isKR ? 49000 : 98.0,
-                        ma60: isKR ? 47000 : 92.0,
-                        volSpike: 1.6
+                        price: isKR ? 50000 : 100.0,
+                        trend: '보통 / 매수 타점 탐색',
+                        buyRange: isKR ? '₩48,000 부근' : '$95.00 부근',
+                        target: isKR ? '₩58,000 (+16%)' : '$115.00 (+15%)',
+                        stop: isKR ? '₩45,000 이탈 시' : '$90.00 이탈 시',
+                        status: 'PASS'
                     };
                 }
 
-                const isCand = (item.ma20 > item.ma60) && (item.close > item.ma20) && (item.volSpike >= 1.5);
-                if (isCand) foundCount++;
+                if (item.status === 'PASS') passCount++;
+                else if (item.status === 'HOLD') holdCount++;
+                else failCount++;
 
-                const stopDist = 1.8 * item.atr;
-                const stopPrice = item.close - stopDist;
-                const targetPrice = item.close + (stopDist * 2);
+                let priceFmt = '$' + item.price.toLocaleString();
+                if (item.mkt === 'KR') priceFmt = '₩' + item.price.toLocaleString();
 
-                let currFmt = '$' + item.close.toFixed(2);
-                let stopFmt = '$' + stopPrice.toFixed(2);
-                let targetFmt = '$' + targetPrice.toFixed(2);
+                let badgeMkt = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${item.mkt==='KR'?'bg-red-500/20 text-red-400':(item.mkt==='CRYPTO'?'bg-amber-500/20 text-amber-400':'bg-blue-500/20 text-blue-400')}">${item.mkt}</span>`;
+                
+                let signalBadge = '<span class="text-emerald-400 font-bold">🟢 매수유효</span>';
+                if (item.status === 'HOLD') signalBadge = '<span class="text-amber-400 font-bold">🟡 확인필요</span>';
+                if (item.status === 'FAIL') signalBadge = '<span class="text-red-400 font-bold">🔴 진입금지</span>';
 
-                if (item.mkt === 'KR') {
-                    currFmt = '₩' + Math.round(item.close).toLocaleString();
-                    stopFmt = '₩' + Math.round(stopPrice).toLocaleString();
-                    targetFmt = '₩' + Math.round(targetPrice).toLocaleString();
-                } else if (item.mkt === 'CRYPTO') {
-                    currFmt = '$' + Math.round(item.close).toLocaleString();
-                    stopFmt = '$' + Math.round(stopPrice).toLocaleString();
-                    targetFmt = '$' + Math.round(targetPrice).toLocaleString();
-                }
-
-                const savedEntryVal = savedEntries[t] || '';
+                const savedVal = savedEntries[t] || '';
 
                 const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 transition";
                 tr.innerHTML = `
-                    <td class="p-2.5"><span class="px-1.5 py-0.5 rounded text-[10px] ${item.mkt === 'KR' ? 'bg-red-500/20 text-red-400' : (item.mkt === 'CRYPTO' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400')}">${item.mkt}</span></td>
-                    <td class="p-2.5 font-bold text-white">${t}</td>
-                    <td class="p-2.5 text-slate-300">${item.name}</td>
-                    <td class="p-2.5">${isCand ? '<span class="text-emerald-400 font-bold">🟢 O (포착)</span>' : '<span class="text-slate-500">⚪ X</span>'}</td>
-                    <td class="p-2.5 font-semibold text-white">${currFmt}</td>
-                    <td class="p-2.5 text-red-400">${stopFmt}</td>
-                    <td class="p-2.5 text-emerald-400">${targetFmt}</td>
-                    <td class="p-2.5"><input type="number" id="entry-${idx}" data-ticker="${t}" value="${savedEntryVal}" placeholder="평단가" class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"></td>
-                    <td class="p-2.5 font-bold" id="signal-${idx}">-</td>
+                    <td class="p-3">${badgeMkt}</td>
+                    <td class="p-3 font-bold text-white">${item.name} <span class="text-slate-500 text-[11px]">(${t})</span></td>
+                    <td class="p-3">${item.trend}</td>
+                    <td class="p-3 font-semibold text-white">${priceFmt}</td>
+                    <td class="p-3 text-blue-300 font-medium">${item.buyRange}</td>
+                    <td class="p-3 text-emerald-400 font-medium">${item.target}</td>
+                    <td class="p-3 text-red-400 font-medium">${item.stop}</td>
+                    <td class="p-3"><input type="number" id="entry-${idx}" data-ticker="${t}" value="${savedVal}" placeholder="평단가 입력" class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"></td>
+                    <td class="p-3 font-bold" id="signal-${idx}">${signalBadge}</td>
                 `;
                 tbody.appendChild(tr);
 
                 const inputEl = tr.querySelector(`#entry-${idx}`);
                 inputEl.addEventListener('input', function() {
-                    calcSellSignal(idx, item.close);
+                    calcSignal(idx, item.price);
                 });
 
-                if (savedEntryVal) {
-                    calcSellSignal(idx, item.close);
+                if (savedVal) {
+                    calcSignal(idx, item.price);
                 }
             });
 
-            document.getElementById('kpi-scan-count').innerText = `포착 종목 ${foundCount}개`;
-            saveEntriesToStorage();
+            document.getElementById('kpi-total-count').innerText = `${tickers.length}개`;
+            document.getElementById('kpi-signal-summary').innerHTML = `<span class="text-emerald-400">${passCount} O</span> / <span class="text-amber-400">${holdCount} △</span> / <span class="text-red-400">${failCount} X</span>`;
+
+            saveStorage();
         }
 
-        function calcSellSignal(idx, currentClose) {
+        function calcSignal(idx, currentPrice) {
             const entryInput = document.getElementById(`entry-${idx}`);
             const sigTd = document.getElementById(`signal-${idx}`);
             if (!entryInput || !sigTd) return;
 
-            const entryVal = entryInput.value;
-            if (!entryVal || entryVal <= 0) {
-                sigTd.innerHTML = '-';
-                saveEntriesToStorage();
+            const val = entryInput.value;
+            if (!val || val <= 0) {
+                saveStorage();
                 return;
             }
 
-            const entry = parseFloat(entryVal);
-            const profitPct = ((currentClose - entry) / entry) * 100;
+            const entry = parseFloat(val);
+            const profitPct = ((currentPrice - entry) / entry) * 100;
 
             if (profitPct <= -5) {
-                sigTd.innerHTML = `<span class="text-red-400">🔴 SELL (${profitPct.toFixed(1)}%)</span>`;
-            } else if (profitPct >= 15) {
-                sigTd.innerHTML = `<span class="text-emerald-400">🟢 TAKE (${profitPct.toFixed(1)}%)</span>`;
+                sigTd.innerHTML = `<span class="px-2 py-1 rounded bg-red-500/20 text-red-400 font-bold">🔴 SELL (${profitPct.toFixed(1)}%)</span>`;
+            } else if (profitPct >= 10) {
+                sigTd.innerHTML = `<span class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 font-bold">🟢 TAKE (${profitPct.toFixed(1)}%)</span>`;
             } else {
-                sigTd.innerHTML = `<span class="text-slate-300">⚪ HOLD (${profitPct.toFixed(1)}%)</span>`;
+                sigTd.innerHTML = `<span class="px-2 py-1 rounded bg-slate-700 text-slate-200 font-bold">⚪ HOLD (${profitPct.toFixed(1)}%)</span>`;
             }
 
-            saveEntriesToStorage();
+            saveStorage();
         }
 
-        function runSimulation() {
-            const capital = parseInt(document.getElementById('input-capital').value);
-            const tech = parseInt(document.getElementById('input-tech').value) / 100;
-            const fx = parseInt(document.getElementById('input-fx').value);
-            const loss = parseInt(document.getElementById('input-loss').value);
-
-            document.getElementById('val-capital').innerText = '$ ' + capital.toLocaleString();
-            document.getElementById('val-tech').innerText = Math.round(tech * 100) + ' %';
-            document.getElementById('val-fx').innerText = fx.toLocaleString() + ' KRW';
-            document.getElementById('val-loss').innerText = '₩ ' + loss.toLocaleString();
-
-            const currentFx = 1385.5;
-            const expectedReturnRate = (tech * 0.18) + ((1 - tech) * 0.06);
-            const finalUsd = capital * Math.pow(1 + expectedReturnRate / 12, 12);
-            const finalKrw = finalUsd * fx;
-            const fxImpact = (finalUsd * fx) - (finalUsd * currentFx);
-
-            const profitKrw = (finalUsd - capital) * fx;
-            const taxableProfit = Math.max(0, profitKrw - 2500000 - loss);
-            const tax = taxableProfit * 0.22;
-
-            document.getElementById('res-total-krw').innerText = '₩ ' + Math.round(finalKrw).toLocaleString();
-            document.getElementById('res-fx-impact').innerText = (fxImpact >= 0 ? '+ ₩ ' : '- ₩ ') + Math.abs(Math.round(fxImpact)).toLocaleString();
-            document.getElementById('res-final-tax').innerText = '₩ ' + Math.round(tax).toLocaleString();
-        }
-
-        // DOM Ready
         window.addEventListener('DOMContentLoaded', function() {
-            const now = new Date();
-            document.getElementById('current-time').innerText = 'KST ' + now.toLocaleString('ko-KR');
+            updateTime();
+            loadStorage();
+            renderTable();
 
-            const savedTickers = localStorage.getItem('saved_tickers');
-            if (savedTickers) {
-                document.getElementById('ticker-input').value = savedTickers;
-            }
-
-            runSwingScanner();
-            runSimulation();
-
-            // Event Listeners
-            document.getElementById('btn-scan').addEventListener('click', runSwingScanner);
+            document.getElementById('btn-scan').addEventListener('click', renderTable);
             document.getElementById('btn-reset').addEventListener('click', function() {
-                localStorage.removeItem('saved_tickers');
-                localStorage.removeItem('saved_entries');
+                localStorage.removeItem('swing_tickers');
+                localStorage.removeItem('swing_entries');
                 document.getElementById('ticker-input').value = 'BTC-USD NVDA AAPL 005930 TSLA 000660';
-                runSwingScanner();
-            });
-
-            ['input-capital', 'input-tech', 'input-fx', 'input-loss'].forEach(id => {
-                document.getElementById(id).addEventListener('input', runSimulation);
+                renderTable();
             });
         });
     </script>
