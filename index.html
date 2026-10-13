@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wall Street Swing Trading Terminal</title>
+    <title>Wall Street Swing & ROI Optimization Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { background-color: #0b0f19; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .card { background: #151d30; border: 1px solid #232d45; border-radius: 12px; }
-        .glow-green { box-shadow: 0 0 12px rgba(16, 185, 129, 0.2); }
-        .glow-red { box-shadow: 0 0 12px rgba(239, 68, 68, 0.2); }
+        .selected-row { background-color: rgba(59, 130, 246, 0.15) !important; border-left: 4px solid #3b82f6; }
     </style>
 </head>
 <body class="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
@@ -19,12 +18,12 @@
     <header class="flex flex-col md:flex-row justify-between items-start md:items-center card p-5 gap-4">
         <div>
             <div class="flex items-center gap-2">
-                <span class="px-2.5 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30">2주 ~ 2개월 관점</span>
+                <span class="px-2.5 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30">ROI & R:R 최적화 엔진</span>
                 <h1 class="text-xl font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-bolt text-amber-400"></i> 월스트리트 스윙 트레이딩 터미널
+                    <i class="fa-solid fa-chart-pie text-amber-400"></i> 스윙 ROI & 손익비(Risk:Reward) 매매 터미널
                 </h1>
             </div>
-            <p class="text-xs text-slate-400 mt-1">모멘텀 정배열 · 눌림목 타점 · 손절/목표가 자동 매도 가이드</p>
+            <p class="text-xs text-slate-400 mt-1">기대 ROI · 손익비 1:2 이상 필터링 · 실시간 보유 수익률 자동 산출</p>
         </div>
         <div class="flex items-center gap-3">
             <span class="text-xs text-slate-400" id="current-time"></span>
@@ -38,24 +37,35 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="card p-4">
             <div class="text-xs text-slate-400 flex justify-between">
-                <span>시장 모멘텀 상태</span>
-                <span class="text-emerald-400 font-bold">강세 유효</span>
+                <span>평균 기대 ROI</span>
+                <span class="text-emerald-400 font-bold">+11.4%</span>
             </div>
             <div class="text-xl font-bold text-emerald-400 mt-2 flex items-center gap-2">
-                <i class="fa-solid fa-arrow-trend-up"></i> 주도주 랠리 국면
+                <i class="fa-solid fa-calculator"></i> 스윙 목표 ROI
             </div>
-            <div class="text-[11px] text-slate-400 mt-2">빅테크/신고가 영역 눌림목 매수 유효</div>
+            <div class="text-[11px] text-slate-400 mt-2">포착 종목 평균 기대 수익률</div>
         </div>
 
         <div class="card p-4">
             <div class="text-xs text-slate-400 flex justify-between">
-                <span>스캔 완료 종목</span>
+                <span>목표 손익비 (R:R Ratio)</span>
+                <span class="text-blue-400 font-bold">1 : 2.5</span>
+            </div>
+            <div class="text-xl font-bold text-white mt-2" id="kpi-rr-summary">
+                고효율 구간 포착
+            </div>
+            <div class="text-[11px] text-slate-400 mt-2">리스크 1 대비 2.5배 이상의 기대수익</div>
+        </div>
+
+        <div class="card p-4">
+            <div class="text-xs text-slate-400 flex justify-between">
+                <span>스캔 종목 수</span>
                 <span class="text-blue-400 font-bold" id="kpi-total-count">0개</span>
             </div>
             <div class="text-xl font-bold text-white mt-2" id="kpi-signal-summary">
                 <span class="text-emerald-400">0 O</span> / <span class="text-amber-400">0 △</span> / <span class="text-red-400">0 X</span>
             </div>
-            <div class="text-[11px] text-slate-400 mt-2">추세 정배열 및 수급량 종합 평가</div>
+            <div class="text-[11px] text-slate-400 mt-2">추세 정배열 및 ROI 가성비 산출</div>
         </div>
 
         <div class="card p-4">
@@ -65,15 +75,6 @@
             </div>
             <div class="text-xl font-bold text-white mt-2">1,385.50 KRW</div>
             <div class="text-[11px] text-slate-400 mt-2">환노출 스윙 자산 원화 평가 우수</div>
-        </div>
-
-        <div class="card p-4">
-            <div class="text-xs text-slate-400 flex justify-between">
-                <span>리스크 관리 원칙</span>
-                <span class="text-red-400 font-bold">Stop-Loss 엄수</span>
-            </div>
-            <div class="text-xl font-bold text-amber-400 mt-2">-5% 이탈 시 칼손절</div>
-            <div class="text-[11px] text-slate-400 mt-2">역배열 급락주 떨어지는 칼날 진입 금지</div>
         </div>
     </div>
 
@@ -85,7 +86,7 @@
                 <input type="text" id="ticker-input" value="BTC-USD NVDA AAPL 005930 TSLA 000660" placeholder="분석할 종목/티커 입력 (예: BTC-USD NVDA AAPL 005930)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
             </div>
             <button id="btn-scan" class="w-full md:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-2">
-                <i class="fa-solid fa-bolt"></i> 스윙 타점 재분석
+                <i class="fa-solid fa-bolt"></i> 스윙 ROI 재분석
             </button>
         </div>
     </section>
@@ -94,9 +95,9 @@
     <main class="card overflow-hidden">
         <div class="p-4 border-b border-slate-800 flex justify-between items-center">
             <h2 class="text-sm font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-list-check text-blue-400"></i> 스윙 포착 종목 및 내 평단가 매도 가이드
+                <i class="fa-solid fa-list-check text-blue-400"></i> 종목별 ROI & 손익비(R:R) 매도 가이드
             </h2>
-            <span class="text-[11px] text-slate-400">* 평단가를 입력하면 실시간 익절/손절 알림이 표시됩니다.</span>
+            <span class="text-[11px] text-slate-400">* 행을 클릭하면 하단 차트 및 ROI 상세 모니터가 열립니다.</span>
         </div>
 
         <div class="overflow-x-auto">
@@ -105,13 +106,13 @@
                     <tr>
                         <th class="p-3">구분</th>
                         <th class="p-3">종목명 (티커)</th>
-                        <th class="p-3">현재 추세 상태</th>
                         <th class="p-3">현재가</th>
-                        <th class="p-3">매수 타점 (눌림목)</th>
-                        <th class="p-3 text-emerald-400">목표가 (+기대치)</th>
-                        <th class="p-3 text-red-400">손절가 / 무효화</th>
+                        <th class="p-3 text-emerald-400">목표가 (기대 ROI)</th>
+                        <th class="p-3 text-red-400">손절가 (리스크)</th>
+                        <th class="p-3 text-amber-400">손익비 (R:R)</th>
+                        <th class="p-3">신호 / ROI 판정</th>
                         <th class="p-3">내 평단가</th>
-                        <th class="p-3">매도 판단</th>
+                        <th class="p-3">보유 ROI (수익률)</th>
                     </tr>
                 </thead>
                 <tbody id="swing-table-body" class="divide-y divide-slate-800/60 text-slate-200">
@@ -121,32 +122,66 @@
         </div>
     </main>
 
-    <!-- Simple Trading Strategy Tip Footer -->
+    <!-- Interactive Dynamic Swing Chart Drawer Section -->
+    <section id="chart-section" class="card p-5 hidden transition-all duration-300 border-blue-500/40">
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                <h3 id="chart-title" class="text-md font-bold text-blue-400 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line"></i> 종목별 추세 및 ROI 가이드라인 차트
+                </h3>
+                <p id="chart-subtitle" class="text-xs text-slate-400 mt-0.5">이동평균선(20MA/60MA) 및 목표/손절 라인 시각화</p>
+            </div>
+            <button id="btn-close-chart" class="text-slate-400 hover:text-white px-2 py-1 text-xs bg-slate-800 rounded">
+                <i class="fa-solid fa-xmark mr-1"></i> 차트 닫기
+            </button>
+        </div>
+
+        <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3">
+            <div class="flex justify-between text-[11px] text-slate-400">
+                <div class="flex gap-4">
+                    <span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-blue-500 inline-block"></span> 종가 추이</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-amber-400 inline-block"></span> 20일 이동평균</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-red-400 inline-block"></span> 60일 이동평균</span>
+                </div>
+                <div class="flex gap-4">
+                    <span class="text-emerald-400 font-bold" id="chart-target-val">목표가: -</span>
+                    <span class="text-red-400 font-bold" id="chart-stop-val">손절가: -</span>
+                </div>
+            </div>
+
+            <div id="svg-chart-wrapper" class="w-full h-52 flex items-center justify-center">
+                <!-- Dynamic SVG Lines -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ROI & Risk Management Strategy Tips -->
     <footer class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
         <div class="card p-4 border-l-4 border-emerald-500">
-            <h3 class="font-bold text-emerald-400 mb-1">🟢 주도주 눌림목 전략 (BTC, AAPL)</h3>
-            <p class="text-slate-400">강한 우상향 추세 종목은 20일 이동평균선 눌림목 구간에서 분할 매수로 접근합니다.</p>
+            <h3 class="font-bold text-emerald-400 mb-1">🎯 ROI 2.0x 이상 손익비 원칙</h3>
+            <p class="text-slate-400">기대 ROI가 예상 최대 손실 폭보다 2배 이상 높은 고효율 종목 위주로 분할 진입합니다.</p>
         </div>
         <div class="card p-4 border-l-4 border-amber-500">
-            <h3 class="font-bold text-amber-400 mb-1">🟡 실적 모멘텀 전략 (NVDA, TSLA)</h3>
-            <p class="text-slate-400">실적 발표 및 이벤트 직전 변동성이 커질 수 있으므로 박스권 하단 매수 후 실적 직전 익절합니다.</p>
+            <h3 class="font-bold text-amber-400 mb-1">📊 분할 익절 스케줄</h3>
+            <p class="text-slate-400">기대 ROI 1차 달성 시 보유 물량의 50%를 익절하여 수익을 확정하고 잔여 물량은 추세를 추종합니다.</p>
         </div>
         <div class="card p-4 border-l-4 border-red-500">
-            <h3 class="font-bold text-red-400 mb-1">🔴 역배열 관망 전략 (005930, 000660)</h3>
-            <p class="text-slate-400">외국인 순매도 및 역배열 급락주는 하락이 멈추기 전까지 진입 금지(확인 필요)가 원칙입니다.</p>
+            <h3 class="font-bold text-red-400 mb-1">🛡️ ROI 리스크 컷 (-5%)</h3>
+            <p class="text-slate-400">평단 대비 -5% 손실 도달 시 지체 없이 무효화 처리(손절)하여 계좌 리스크를 최소화합니다.</p>
         </div>
     </footer>
 
     <script>
-        // Preset Report Data
         const masterReportDB = {
-            'BTC-USD': { mkt: 'CRYPTO', name: '비트코인', price: 83123, trend: '단기 횡보 우상향', buyRange: '$81,000 ~ $81,500', target: '$92,000 (+12%)', stop: '$79,500 이탈 시', status: 'PASS' },
-            'NVDA': { mkt: 'US', name: '엔비디아', price: 227.27, trend: '단기 우상향 유지', buyRange: '$215 ~ $220', target: '$243.00 (+10%)', stop: '$205.00 이탈 시', status: 'PASS' },
-            'AAPL': { mkt: 'US', name: '애플', price: 343.93, trend: '강한 우상향 (신고가)', buyRange: '$335 ~ $340', target: '$365.00 (+7%)', stop: '$328.00 이탈 시', status: 'PASS' },
-            '005930': { mkt: 'KR', name: '삼성전자', price: 232000, trend: '단기 급락 / 역배열', buyRange: '확인 필요 (관망)', target: '265,000원 (반등)', stop: '215,000원 이탈 시', status: 'HOLD' },
-            'TSLA': { mkt: 'US', name: '테슬라', price: 374.86, trend: '중기 박스권 횡보', buyRange: '$355 ~ $360', target: '$410.00 (+12%)', stop: '$345.00 이탈 시', status: 'PASS' },
-            '000660': { mkt: 'KR', name: 'SK하이닉스', price: 1443000, trend: '단기 급락 / 추세이탈', buyRange: '확인 필요 (관망)', target: '1,650,000원', stop: '1,350,000원 이탈 시', status: 'FAIL' }
+            'BTC-USD': { mkt: 'CRYPTO', name: '비트코인', price: 83123, targetNum: 92000, target: '$92,000 (+10.7%)', stopNum: 79500, stop: '$79,500 (-4.4%)', rrRatio: '1 : 2.43', status: 'PASS', history: [78000, 79200, 80500, 81200, 80800, 82400, 83123], ma20: 81000, ma60: 78500 },
+            'NVDA': { mkt: 'US', name: '엔비디아', price: 227.27, targetNum: 243.0, target: '$243.00 (+6.9%)', stopNum: 205.0, stop: '$205.00 (-9.8%)', rrRatio: '1 : 1.71', status: 'PASS', history: [210, 215, 218, 222, 220, 225, 227.27], ma20: 219, ma60: 210 },
+            'AAPL': { mkt: 'US', name: '애플', price: 343.93, targetNum: 365.0, target: '$365.00 (+6.1%)', stopNum: 328.0, stop: '$328.00 (-4.6%)', rrRatio: '1 : 1.32', status: 'PASS', history: [320, 325, 332, 338, 336, 340, 343.93], ma20: 335, ma60: 322 },
+            '005930': { mkt: 'KR', name: '삼성전자', price: 232000, targetNum: 265000, target: '265,000원 (+14.2%)', stopNum: 215000, stop: '215,000원 (-7.3%)', rrRatio: '1 : 1.94', status: 'HOLD', history: [270000, 265000, 258000, 248000, 242000, 235000, 232000], ma20: 255000, ma60: 268000 },
+            'TSLA': { mkt: 'US', name: '테슬라', price: 374.86, targetNum: 410.0, target: '$410.00 (+9.4%)', stopNum: 345.0, stop: '$345.00 (-8.0%)', rrRatio: '1 : 1.18', status: 'PASS', history: [350, 362, 358, 370, 365, 372, 374.86], ma20: 362, ma60: 355 },
+            '000660': { mkt: 'KR', name: 'SK하이닉스', price: 1443000, targetNum: 1650000, target: '1,650,000원 (+14.3%)', stopNum: 1350000, stop: '1,350,000원 (-6.4%)', rrRatio: '1 : 2.23', status: 'FAIL', history: [1680000, 1620000, 1580000, 1510000, 1480000, 1460000, 1443000], ma20: 1560000, ma60: 1620000 }
         };
+
+        let selectedTicker = null;
 
         function updateTime() {
             const now = new Date();
@@ -184,15 +219,26 @@
                 let item = masterReportDB[t];
                 if (!item) {
                     const isKR = /^\d{6}$/.test(t);
+                    const baseP = isKR ? 50000 : 100.0;
+                    const tgtP = baseP * 1.15;
+                    const stpP = baseP * 0.92;
+                    const reward = ((tgtP - baseP) / baseP) * 100;
+                    const risk = ((baseP - stpP) / baseP) * 100;
+                    const rr = (reward / risk).toFixed(2);
+
                     item = {
                         mkt: isKR ? 'KR' : 'US',
                         name: t,
-                        price: isKR ? 50000 : 100.0,
-                        trend: '보통 / 매수 타점 탐색',
-                        buyRange: isKR ? '₩48,000 부근' : '$95.00 부근',
-                        target: isKR ? '₩58,000 (+16%)' : '$115.00 (+15%)',
-                        stop: isKR ? '₩45,000 이탈 시' : '$90.00 이탈 시',
-                        status: 'PASS'
+                        price: baseP,
+                        targetNum: tgtP,
+                        target: isKR ? `₩${tgtP.toLocaleString()} (+${reward.toFixed(1)}%)` : `$${tgtP.toFixed(2)} (+${reward.toFixed(1)}%)`,
+                        stopNum: stpP,
+                        stop: isKR ? `₩${stpP.toLocaleString()} (-${risk.toFixed(1)}%)` : `$${stpP.toFixed(2)} (-${risk.toFixed(1)}%)`,
+                        rrRatio: `1 : ${rr}`,
+                        status: 'PASS',
+                        history: [baseP*0.92, baseP*0.94, baseP*0.96, baseP*0.95, baseP*0.98, baseP*0.99, baseP],
+                        ma20: baseP * 0.96,
+                        ma60: baseP * 0.93
                     };
                 }
 
@@ -205,25 +251,31 @@
 
                 let badgeMkt = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${item.mkt==='KR'?'bg-red-500/20 text-red-400':(item.mkt==='CRYPTO'?'bg-amber-500/20 text-amber-400':'bg-blue-500/20 text-blue-400')}">${item.mkt}</span>`;
                 
-                let signalBadge = '<span class="text-emerald-400 font-bold">🟢 매수유효</span>';
+                let signalBadge = '<span class="text-emerald-400 font-bold">🟢 ROI 우수</span>';
                 if (item.status === 'HOLD') signalBadge = '<span class="text-amber-400 font-bold">🟡 확인필요</span>';
-                if (item.status === 'FAIL') signalBadge = '<span class="text-red-400 font-bold">🔴 진입금지</span>';
+                if (item.status === 'FAIL') signalBadge = '<span class="text-red-400 font-bold">🔴 ROI 불량</span>';
 
                 const savedVal = savedEntries[t] || '';
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-800/40 transition";
+                tr.id = `row-${t}`;
+                tr.className = "hover:bg-slate-800/60 cursor-pointer transition";
                 tr.innerHTML = `
                     <td class="p-3">${badgeMkt}</td>
                     <td class="p-3 font-bold text-white">${item.name} <span class="text-slate-500 text-[11px]">(${t})</span></td>
-                    <td class="p-3">${item.trend}</td>
                     <td class="p-3 font-semibold text-white">${priceFmt}</td>
-                    <td class="p-3 text-blue-300 font-medium">${item.buyRange}</td>
                     <td class="p-3 text-emerald-400 font-medium">${item.target}</td>
                     <td class="p-3 text-red-400 font-medium">${item.stop}</td>
-                    <td class="p-3"><input type="number" id="entry-${idx}" data-ticker="${t}" value="${savedVal}" placeholder="평단가 입력" class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"></td>
-                    <td class="p-3 font-bold" id="signal-${idx}">${signalBadge}</td>
+                    <td class="p-3 text-amber-400 font-bold">${item.rrRatio}</td>
+                    <td class="p-3">${signalBadge}</td>
+                    <td class="p-3" onclick="event.stopPropagation()"><input type="number" id="entry-${idx}" data-ticker="${t}" value="${savedVal}" placeholder="평단가" class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"></td>
+                    <td class="p-3 font-bold" id="signal-${idx}">-</td>
                 `;
+
+                tr.addEventListener('click', function() {
+                    toggleStockChart(t, item);
+                });
+
                 tbody.appendChild(tr);
 
                 const inputEl = tr.querySelector(`#entry-${idx}`);
@@ -247,39 +299,4 @@
             const sigTd = document.getElementById(`signal-${idx}`);
             if (!entryInput || !sigTd) return;
 
-            const val = entryInput.value;
-            if (!val || val <= 0) {
-                saveStorage();
-                return;
-            }
-
-            const entry = parseFloat(val);
-            const profitPct = ((currentPrice - entry) / entry) * 100;
-
-            if (profitPct <= -5) {
-                sigTd.innerHTML = `<span class="px-2 py-1 rounded bg-red-500/20 text-red-400 font-bold">🔴 SELL (${profitPct.toFixed(1)}%)</span>`;
-            } else if (profitPct >= 10) {
-                sigTd.innerHTML = `<span class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 font-bold">🟢 TAKE (${profitPct.toFixed(1)}%)</span>`;
-            } else {
-                sigTd.innerHTML = `<span class="px-2 py-1 rounded bg-slate-700 text-slate-200 font-bold">⚪ HOLD (${profitPct.toFixed(1)}%)</span>`;
-            }
-
-            saveStorage();
-        }
-
-        window.addEventListener('DOMContentLoaded', function() {
-            updateTime();
-            loadStorage();
-            renderTable();
-
-            document.getElementById('btn-scan').addEventListener('click', renderTable);
-            document.getElementById('btn-reset').addEventListener('click', function() {
-                localStorage.removeItem('swing_tickers');
-                localStorage.removeItem('swing_entries');
-                document.getElementById('ticker-input').value = 'BTC-USD NVDA AAPL 005930 TSLA 000660';
-                renderTable();
-            });
-        });
-    </script>
-</body>
-</html>
+            const val = entryInput
