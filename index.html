@@ -1,644 +1,265 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gemini Pro Terminal - Global Macro & Stock Dashboard</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Alpine.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              bg: '#0a0e17',
-              card: '#121824',
-              border: '#1e293b',
-              accent: '#3b82f6',
-              bull: '#10b981',
-              bear: '#ef4444',
-              gold: '#f59e0b'
-            }
-          },
-          fontFamily: {
-            mono: ['JetBrains Mono', 'Courier New', 'monospace']
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background-color: #0a0e17; color: #e2e8f0; }
-    .num-font { font-family: 'JetBrains Mono', monospace; }
-    .pulse-glow-green { animation: pulseGreen 2s infinite; }
-    .pulse-glow-red { animation: pulseRed 2s infinite; }
-    @keyframes pulseGreen {
-      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-      70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-    }
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0a0e17; }
-    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #334155; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Market AI Investment Terminal - KOR Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Pretendard', system-ui, sans-serif; }
+        .card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; }
+        .glow { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+    </style>
 </head>
-<body class="min-h-screen pb-10" x-data="dashboardApp()">
+<body class="p-4 md:p-6 space-y-6">
 
-  <!-- Top Navbar -->
-  <header class="border-b border-brand-border bg-brand-card/80 backdrop-blur sticky top-0 z-50 px-6 py-3 flex flex-wrap justify-between items-center gap-4">
-    <div class="flex items-center space-x-3">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-white text-lg shadow-lg">
-        G
-      </div>
-      <div>
-        <h1 class="text-lg font-bold tracking-wide text-white flex items-center gap-2">
-          GEMINI PRO FINANCIAL TERMINAL
-          <span class="text-xs font-normal px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">v2.4 Macro Pro</span>
-        </h1>
-        <p class="text-xs text-slate-400">Institutional Multi-Asset & Bond Yield Radar</p>
-      </div>
-    </div>
-
-    <!-- Live Market Ticker Clock -->
-    <div class="flex items-center space-x-6 text-sm">
-      <div class="hidden md:flex items-center space-x-2 bg-slate-900/80 px-3 py-1.5 rounded-md border border-slate-800">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span class="text-xs text-slate-400">NY Market: <strong class="text-slate-200">OPEN</strong></span>
-      </div>
-      <div class="text-right">
-        <div class="text-xs text-slate-400">GLOBAL TIME (UTC)</div>
-        <div class="num-font font-medium text-slate-200" x-text="currentTime">--:--:--</div>
-      </div>
-      <button @click="refreshData()" class="p-2 rounded-lg bg-brand-border hover:bg-slate-700 text-slate-300 transition-colors" title="데이터 새로고침">
-        <i class="fa-solid fa-rotate" :class="{'fa-spin': isLoading}"></i>
-      </button>
-    </div>
-  </header>
-
-  <main class="max-w-[1700px] mx-auto px-4 md:px-6 mt-6 space-y-6">
-
-    <!-- Top Key Metrics Ribbon (프롬프트 핵심 지표 한눈에 보기) -->
-    <section class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-      <!-- S&P 500 -->
-      <div class="bg-brand-card p-3.5 rounded-xl border border-brand-border hover:border-slate-700 transition-all">
-        <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-          <span>S&P 500</span>
-          <i class="fa-solid fa-chart-line text-slate-500"></i>
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center card p-4 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-blue-400 flex items-center gap-2">
+                <i class="fa-solid fa-brain"></i> 미장 AI 프론티어 터미널
+            </h1>
+            <p class="text-xs text-slate-400 mt-1">한국 투자자를 위한 AI 환율 대응 · 야간 리스크 방어 · 세금 최적화 시스템</p>
         </div>
-        <div class="num-font text-lg font-bold text-white" x-text="metrics.sp500.val">5,815.20</div>
-        <div class="num-font text-xs flex items-center gap-1 font-medium mt-0.5" :class="metrics.sp500.change >= 0 ? 'text-emerald-400' : 'text-rose-400'">
-          <i :class="metrics.sp500.change >= 0 ? 'fa-solid fa-caret-up' : 'fa-solid fa-caret-down'"></i>
-          <span x-text="(metrics.sp500.change >= 0 ? '+' : '') + metrics.sp500.change + '%'">+0.42%</span>
-        </div>
-      </div>
-
-      <!-- NASDAQ -->
-      <div class="bg-brand-card p-3.5 rounded-xl border border-brand-border hover:border-slate-700 transition-all">
-        <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-          <span>NASDAQ</span>
-          <i class="fa-solid fa-microchip text-slate-500"></i>
-        </div>
-        <div class="num-font text-lg font-bold text-white" x-text="metrics.nasdaq.val">18,367.10</div>
-        <div class="num-font text-xs flex items-center gap-1 font-medium mt-0.5" :class="metrics.nasdaq.change >= 0 ? 'text-emerald-400' : 'text-rose-400'">
-          <i :class="metrics.nasdaq.change >= 0 ? 'fa-solid fa-caret-up' : 'fa-solid fa-caret-down'"></i>
-          <span x-text="(metrics.nasdaq.change >= 0 ? '+' : '') + metrics.nasdaq.change + '%'">+0.83%</span>
-        </div>
-      </div>
-
-      <!-- US 10Y Yield -->
-      <div class="bg-brand-card p-3.5 rounded-xl border border-brand-border hover:border-slate-700 transition-all border-l-4 border-l-blue-500">
-        <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-          <span>미국 10년물 국채</span>
-          <span class="text-[10px] bg-blue-500/20 text-blue-400 px-1 rounded">10Y</span>
-        </div>
-        <div class="num-font text-lg font-bold text-white" x-text="metrics.us10y.val + '%'">4.08%</div>
-        <div class="num-font text-xs flex items-center gap-1 font-medium mt-0.5" :class="metrics.us10y.change >= 0 ? 'text-rose-400' : 'text-emerald-400'">
-          <i :class="metrics.us10y.change >= 0 ? 'fa-solid fa-caret-up' : 'fa-solid fa-caret-down'"></i>
-          <span x-text="metrics.us10y.change + ' bps'">-2.4 bps</span>
-        </div>
-      </div>
-
-      <!-- 10Y - 2Y Yield Spread -->
-      <div class="bg-brand-card p-3.5 rounded-xl border border-brand-border hover:border-slate-700 transition-all border-l-4" :class="metrics.spread10_2.val < 0 ? 'border-l-rose-500' : 'border-l-emerald-500'">
-        <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-          <span>장단기 금리차 (10Y-2Y)</span>
-          <i class="fa-solid fa-arrow-trend-up text-slate-500"></i>
-        </div>
-        <div class="num-font text-lg font-bold" :class="metrics.spread10_2.val < 0 ? 'text-rose-400' : 'text-emerald-400'" x-text="(metrics.spread10_2.val > 0 ? '+' : '') + metrics.spread10_2.val + ' %p'">
-          +0.14 %p
-        </div>
-        <div class="text-[10px] text-slate-400 mt-0.5" x-text="metrics.spread10_2.val < 0 ? '역전 상태 (경기후퇴 경보)' : '정상화 진행중 (수익률곡선 정상화)'">
-          정상화 진행중
-        </div>
-      </div>
-
-      <!-- Dollar Index (DXY) -->
-      <div class="bg-brand-card p-3.5 rounded-xl border border-brand-border hover:border-slate-700 transition-all">
-        <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-          <span>달러 인덱스 (DXY)</span>
-          <i class="fa-solid fa-dollar-sign text-slate-500"></i>
-        </div>
-        <div class="num-font text-lg font-bold text-white" x-text="metrics.dxy.val">102.85</div>
-        <div class="num-font text-xs flex items-center gap-1 font-medium mt-0.5" :class="metrics.dxy.change >= 0 ? 'text-emerald-400' : 'text-rose-400'">
-          <i :class="metrics.dxy.change >= 0 ? 'fa-solid fa-caret-up' : 'fa-solid fa-caret-down'"></i>
-          <span x-text="(metrics.dxy.change >= 0 ? '+' : '') + metrics.dxy.change + '%'">+0.12%</span>
-        </div>
-      </div>
-
-      <!-- VIX Volatility -->
-      <div class="bg-brand-card p-3.5 rounded-xl border border-brand-border hover:border-slate-700 transition-all">
-        <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-          <span>VIX 변동성 지수</span>
-          <span class="text-[10px] px-1.5 py-0.2 rounded font-semibold" :class="metrics.vix.val > 20 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'" x-text="metrics.vix.val > 20 ? '주의' : '안정'">안정</span>
-        </div>
-        <div class="num-font text-lg font-bold text-white" x-text="metrics.vix.val">16.42</div>
-        <div class="num-font text-xs flex items-center gap-1 font-medium mt-0.5" :class="metrics.vix.change <= 0 ? 'text-emerald-400' : 'text-rose-400'">
-          <i :class="metrics.vix.change >= 0 ? 'fa-solid fa-caret-up' : 'fa-solid fa-caret-down'"></i>
-          <span x-text="(metrics.vix.change >= 0 ? '+' : '') + metrics.vix.change + '%'">-3.15%</span>
-        </div>
-      </div>
-
-      <!-- Gold Spot -->
-      <div class="bg-brand-card p-3.5 rounded-xl border border-brand-border hover:border-slate-700 transition-all border-l-4 border-l-amber-500">
-        <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-          <span>금 시세 (Gold/oz)</span>
-          <i class="fa-solid fa-coins text-amber-500"></i>
-        </div>
-        <div class="num-font text-lg font-bold text-amber-400" x-text="'$' + metrics.gold.val"> $2,658.40</div>
-        <div class="num-font text-xs flex items-center gap-1 font-medium mt-0.5" :class="metrics.gold.change >= 0 ? 'text-emerald-400' : 'text-rose-400'">
-          <i :class="metrics.gold.change >= 0 ? 'fa-solid fa-caret-up' : 'fa-solid fa-caret-down'"></i>
-          <span x-text="(metrics.gold.change >= 0 ? '+' : '') + metrics.gold.change + '%'">+0.65%</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Gemini AI Pro Differentiation Section: Automated Macro Analysis & Strategy Alert -->
-    <section class="bg-gradient-to-r from-slate-900 via-indigo-950/60 to-slate-900 border border-indigo-800/40 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
-      <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-3">
         <div class="flex items-center gap-3">
-          <div class="p-2.5 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30">
-            <i class="fa-solid fa-brain text-xl"></i>
-          </div>
-          <div>
-            <h2 class="text-base font-bold text-white flex items-center gap-2">
-              Gemini AI 실시간 마크로 종합 진단 브리핑
-              <span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-normal">Real-time Synthesized</span>
-            </h2>
-            <p class="text-xs text-slate-400">국채금리, 금리차, VIX, 달러인덱스의 상호작용 분석 결과</p>
-          </div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-ping"></span>
+                실시간 야간 프림마켓 동계 중
+            </span>
+            <span class="text-xs text-slate-400" id="current-time"></span>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-slate-400">시장 위험지수:</span>
-          <div class="w-32 bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-700">
-            <div class="bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500 h-full w-[38%]"></div>
-          </div>
-          <span class="text-xs font-bold text-amber-400">38/100 (중립/안정)</span>
-        </div>
-      </div>
-      <div class="grid md:grid-cols-3 gap-4 text-xs text-slate-300 border-t border-slate-800/80 pt-3 mt-1">
-        <div class="space-y-1">
-          <span class="font-semibold text-blue-400 flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> 국채금리 & 금리차 (Un-Inversion)</span>
-          <p class="leading-relaxed text-slate-300">10년물 금리가 4.08% 선에서 안정을 찾으며 10Y-2Y 스프레드가 **+14bps**로 플러스 전환을 유지하고 있습니다. 장단기 금리차 정상화 단계로, 침체 우려 완화와 연착륙(Soft Landing) 시나리오에 무게가 실립니다.</p>
-        </div>
-        <div class="space-y-1">
-          <span class="font-semibold text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-shield-halved"></i> VIX & 달러 vs 안전자산</span>
-          <p class="leading-relaxed text-slate-300">VIX가 **16.42**로 안정세를 보이며 위험자산 선호 심리가 재개되었습니다. 달러 인덱스(102.85) 강세에도 불구하고 지정학적 리스크 hedge 수요로 금 시세($2,658)가 우상향을 유지하는 이례적 동반 강세입니다.</p>
-        </div>
-        <div class="space-y-1">
-          <span class="font-semibold text-emerald-400 flex items-center gap-1.5"><i class="fa-solid fa-chess-knight"></i> 포트폴리오 대응 가이드</span>
-          <p class="leading-relaxed text-slate-300">이번 주 예정된 CPI 발표 전까지는 대형 기술주 중심의 리밸런싱이 유효합니다. 국채 금리 상단 제한에 따라 금리 민감주(빅테크, 성장주) 선호 분위기가 이어질 것으로 전망됩니다.</p>
-        </div>
-      </div>
-    </section>
+    </header>
 
-    <!-- Main Visual Panels: Charts & Yield Curve Section -->
-    <section class="grid lg:grid-cols-3 gap-6">
-
-      <!-- Left Column: US Treasury Yield Curve Visualizer (마누스 대비 차별화 포인트) -->
-      <div class="bg-brand-card border border-brand-border rounded-2xl p-5 flex flex-col justify-between">
-        <div>
-          <div class="flex justify-between items-center mb-4">
-            <div>
-              <h3 class="font-bold text-white text-base flex items-center gap-2">
-                <i class="fa-solid fa-chart-area text-blue-500"></i>
-                미 국채 수익률 곡선 (Yield Curve)
-              </h3>
-              <p class="text-xs text-slate-400">2년, 10년, 30년 국채 금리 모니터링</p>
+    <!-- Top KPI Grid: KOR US-Investor Specific Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- FX USD/KRW -->
+        <div class="card p-4">
+            <div class="text-xs text-slate-400 flex justify-between">
+                <span>원/달러 환율 (USD/KRW)</span>
+                <span class="text-emerald-400 font-bold">+0.42%</span>
             </div>
-            <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">실시간 연동</span>
-          </div>
-
-          <!-- Yield Curve Metrics Table -->
-          <div class="grid grid-cols-3 gap-2 mb-4 bg-slate-900/60 p-3 rounded-xl border border-slate-800 text-center">
-            <div>
-              <div class="text-[11px] text-slate-400">2년물 (US 2Y)</div>
-              <div class="num-font text-base font-bold text-slate-200" x-text="metrics.us2y.val + '%'">3.94%</div>
-              <div class="text-[10px] text-emerald-400">-3.1 bps</div>
+            <div class="text-2xl font-bold text-white mt-2" id="fx-rate">1,385.50 KRW</div>
+            <div class="mt-2 text-xs text-slate-400 flex justify-between">
+                <span>AI 환율전망: <strong class="text-blue-400">단기 상방 압력</strong></span>
+                <span>적정 환헤지 비중: <strong class="text-amber-400">35%</strong></span>
             </div>
-            <div>
-              <div class="text-[11px] text-slate-400">10년물 (US 10Y)</div>
-              <div class="num-font text-base font-bold text-blue-400" x-text="metrics.us10y.val + '%'">4.08%</div>
-              <div class="text-[10px] text-emerald-400">-2.4 bps</div>
-            </div>
-            <div>
-              <div class="text-[11px] text-slate-400">30년물 (US 30Y)</div>
-              <div class="num-font text-base font-bold text-indigo-400" x-text="metrics.us30y.val + '%'">4.36%</div>
-              <div class="text-[10px] text-rose-400">+1.2 bps</div>
-            </div>
-          </div>
-
-          <!-- Chart Canvas for Yield Curve -->
-          <div class="h-56 relative">
-            <canvas id="yieldCurveChart"></canvas>
-          </div>
         </div>
 
-        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-          <span>10Y - 2Y 차이: <strong class="text-emerald-400 font-mono">+14 bps</strong></span>
-          <span>10Y - 30Y 차이: <strong class="text-indigo-400 font-mono">-28 bps</strong></span>
-        </div>
-      </div>
-
-      <!-- Center Column: Multi-Asset Trend Comparison Chart -->
-      <div class="bg-brand-card border border-brand-border rounded-2xl p-5 lg:col-span-2 flex flex-col justify-between">
-        <div>
-          <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
-            <div>
-              <h3 class="font-bold text-white text-base flex items-center gap-2">
-                <i class="fa-solid fa-arrow-trend-up text-emerald-500"></i>
-                주요 자산 추이 비교 (Normalized % Change)
-              </h3>
-              <p class="text-xs text-slate-400">S&P500, 나스닥, 달러인덱스, 금 시세 상관관계 추적</p>
+        <!-- Tax Harvesting AI -->
+        <div class="card p-4">
+            <div class="text-xs text-slate-400 flex justify-between">
+                <span>2026 양도소득세 추정액</span>
+                <span class="text-slate-400">공제: 250만 원</span>
             </div>
-            <!-- Timeframe Toggles -->
-            <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-800 text-xs">
-              <button @click="setTimeframe('1D')" :class="timeframe === '1D' ? 'bg-blue-600 text-white font-medium' : 'text-slate-400 hover:text-white'" class="px-3 py-1 rounded-md transition-all">1D</button>
-              <button @click="setTimeframe('1W')" :class="timeframe === '1W' ? 'bg-blue-600 text-white font-medium' : 'text-slate-400 hover:text-white'" class="px-3 py-1 rounded-md transition-all">1W</button>
-              <button @click="setTimeframe('1M')" :class="timeframe === '1M' ? 'bg-blue-600 text-white font-medium' : 'text-slate-400 hover:text-white'" class="px-3 py-1 rounded-md transition-all">1M</button>
-              <button @click="setTimeframe('YTD')" :class="timeframe === 'YTD' ? 'bg-blue-600 text-white font-medium' : 'text-slate-400 hover:text-white'" class="px-3 py-1 rounded-md transition-all">YTD</button>
+            <div class="text-2xl font-bold text-amber-400 mt-2">₩ 1,420,000</div>
+            <div class="mt-2 text-xs text-slate-400 flex justify-between">
+                <span>AI 절세 가이드:</span>
+                <span class="text-emerald-400 underline cursor-pointer">손실확정(-₩120만) 조언</span>
             </div>
-          </div>
-
-          <!-- Chart Canvas for Asset Comparison -->
-          <div class="h-64 relative">
-            <canvas id="multiAssetChart"></canvas>
-          </div>
         </div>
 
-        <!-- Legend Footer -->
-        <div class="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-around text-xs gap-3">
-          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500"></span><span class="text-slate-300">S&P 500</span></div>
-          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-400"></span><span class="text-slate-300">나스닥</span></div>
-          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-purple-400"></span><span class="text-slate-300">달러인덱스 (DXY)</span></div>
-          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400"></span><span class="text-slate-300">금 시세 (Gold)</span></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Bottom Section: Economic Calendar & Macro Event Radar -->
-    <section class="grid lg:grid-cols-3 gap-6">
-
-      <!-- Economic Schedule Table (CPI, PCE, FOMC 주간 일정) -->
-      <div class="bg-brand-card border border-brand-border rounded-2xl p-5 lg:col-span-2">
-        <div class="flex justify-between items-center mb-4">
-          <div>
-            <h3 class="font-bold text-white text-base flex items-center gap-2">
-              <i class="fa-solid fa-calendar-days text-indigo-400"></i>
-              이번 주 주요 경제 일정 및 경제지표 (CPI·PCE·FOMC)
-            </h3>
-            <p class="text-xs text-slate-400">글로벌 금융 시장 변동성을 유발할 수 있는 핵심 Macro 이벤트</p>
-          </div>
-          <div class="flex gap-2">
-            <span class="text-xs bg-rose-500/10 text-rose-400 border border-rose-500/30 px-2.5 py-1 rounded-full font-medium">HIGH IMPACT 전용</span>
-          </div>
-        </div>
-
-        <!-- Calendar Data Table -->
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs text-slate-300">
-            <thead class="bg-slate-900/80 uppercase text-[11px] text-slate-400 border-b border-slate-800">
-              <tr>
-                <th class="py-3 px-3">일시 (KST)</th>
-                <th class="py-3 px-3">국가 / 이벤트</th>
-                <th class="py-3 px-3">중요도</th>
-                <th class="py-3 px-3 text-right">예상치 (Consensus)</th>
-                <th class="py-3 px-3 text-right">이전치 (Prior)</th>
-                <th class="py-3 px-3 text-center">시장 영향 / 상태</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-800/60">
-              <!-- Item 1: CPI -->
-              <tr class="hover:bg-slate-800/40 transition-colors">
-                <td class="py-3 px-3 num-font font-medium text-slate-200">10.10 (목) 21:30</td>
-                <td class="py-3 px-3 font-semibold text-white flex items-center gap-2">
-                  <span class="text-base">🇺🇸</span> 미국 근원 소비자물가지수 (Core CPI MoM)
-                </td>
-                <td class="py-3 px-3">
-                  <span class="flex text-amber-400 gap-0.5 text-[10px]">
-                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                  </span>
-                </td>
-                <td class="py-3 px-3 text-right num-font font-medium text-blue-400">0.2%</td>
-                <td class="py-3 px-3 text-right num-font text-slate-400">0.3%</td>
-                <td class="py-3 px-3 text-center">
-                  <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-medium">초고변동성 대기</span>
-                </td>
-              </tr>
-              <!-- Item 2: FOMC Minutes -->
-              <tr class="hover:bg-slate-800/40 transition-colors">
-                <td class="py-3 px-3 num-font font-medium text-slate-200">10.10 (목) 03:00</td>
-                <td class="py-3 px-3 font-semibold text-white flex items-center gap-2">
-                  <span class="text-base">🇺🇸</span> FOMC 의사록 공개 (FOMC Minutes)
-                </td>
-                <td class="py-3 px-3">
-                  <span class="flex text-amber-400 gap-0.5 text-[10px]">
-                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                  </span>
-                </td>
-                <td class="py-3 px-3 text-right num-font text-slate-400">-</td>
-                <td class="py-3 px-3 text-right num-font text-slate-400">-</td>
-                <td class="py-3 px-3 text-center">
-                  <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">금리 인하 궤도 점검</span>
-                </td>
-              </tr>
-              <!-- Item 3: PPI -->
-              <tr class="hover:bg-slate-800/40 transition-colors">
-                <td class="py-3 px-3 num-font font-medium text-slate-200">10.11 (금) 21:30</td>
-                <td class="py-3 px-3 font-semibold text-white flex items-center gap-2">
-                  <span class="text-base">🇺🇸</span> 미국 생산자물가지수 (PPI YoY)
-                </td>
-                <td class="py-3 px-3">
-                  <span class="flex text-amber-400 gap-0.5 text-[10px]">
-                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i>
-                  </span>
-                </td>
-                <td class="py-3 px-3 text-right num-font font-medium text-blue-400">1.6%</td>
-                <td class="py-3 px-3 text-right num-font text-slate-400">1.7%</td>
-                <td class="py-3 px-3 text-center">
-                  <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">발표 예정</span>
-                </td>
-              </tr>
-              <!-- Item 4: PCE Preview -->
-              <tr class="hover:bg-slate-800/40 transition-colors">
-                <td class="py-3 px-3 num-font font-medium text-slate-200">10.25 (금) 21:30</td>
-                <td class="py-3 px-3 font-semibold text-white flex items-center gap-2">
-                  <span class="text-base">🇺🇸</span> 근원 PCE 물가지수 (Core PCE)
-                </td>
-                <td class="py-3 px-3">
-                  <span class="flex text-amber-400 gap-0.5 text-[10px]">
-                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                  </span>
-                </td>
-                <td class="py-3 px-3 text-right num-font font-medium text-blue-400">2.7%</td>
-                <td class="py-3 px-3 text-right num-font text-slate-400">2.7%</td>
-                <td class="py-3 px-3 text-center">
-                  <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Fed 타겟 지표</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Right Column: Market Heatmap / Fear & Greed Radar -->
-      <div class="bg-brand-card border border-brand-border rounded-2xl p-5 flex flex-col justify-between">
-        <div>
-          <h3 class="font-bold text-white text-base mb-1 flex items-center gap-2">
-            <i class="fa-solid fa-gauge-high text-amber-400"></i>
-            변동성 & 리스크 게이지 (VIX Monitor)
-          </h3>
-          <p class="text-xs text-slate-400 mb-4">VIX 및 시장 투심 지표 분석</p>
-
-          <!-- VIX Visual Meter -->
-          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center space-y-3">
-            <div class="text-xs text-slate-400">현재 시장 변동성 상태</div>
-            <div class="text-3xl font-extrabold num-font text-emerald-400" x-text="metrics.vix.val">16.42</div>
-            <div class="text-xs font-medium text-slate-300">"위험 선호 (Risk-On) 구역 진입"</div>
-
-            <!-- Visual Bar -->
-            <div class="w-full bg-slate-800 h-3 rounded-full relative overflow-hidden flex">
-              <div class="bg-emerald-500 h-full w-1/3" title="0-15: 탐욕/안정"></div>
-              <div class="bg-amber-500 h-full w-1/3" title="15-25: 중립/주의"></div>
-              <div class="bg-rose-500 h-full w-1/3" title="25+: 극심한 공포"></div>
+        <!-- Night AI Risk Gauge -->
+        <div class="card p-4">
+            <div class="text-xs text-slate-400 flex justify-between">
+                <span>야간 시차 리스크 지수</span>
+                <span class="text-blue-400">안정성 78%</span>
             </div>
-            <div class="flex justify-between text-[10px] text-slate-400 px-1">
-              <span>0 (극심한 안심)</span>
-              <span>20 (경계)</span>
-              <span>40+ (공포)</span>
+            <div class="text-2xl font-bold text-emerald-400 mt-2">LOW RISK</div>
+            <div class="mt-2 text-xs text-slate-400">
+                AI 변동성 조기경보: <span class="text-slate-200">주요 지수 하방 리스크 제한적</span>
             </div>
-          </div>
-
-          <!-- Quick Watchlist Summary -->
-          <div class="mt-4 space-y-2">
-            <div class="text-xs font-semibold text-slate-300">원자재 & 외환 체크</div>
-            <div class="flex justify-between items-center text-xs p-2 bg-slate-900/40 rounded-lg border border-slate-800/80">
-              <span class="text-slate-400">WTI 원유 (Crude Oil)</span>
-              <span class="num-font font-bold text-slate-200">$75.56 <span class="text-emerald-400 text-[10px]">+1.1%</span></span>
-            </div>
-            <div class="flex justify-between items-center text-xs p-2 bg-slate-900/40 rounded-lg border border-slate-800/80">
-              <span class="text-slate-400">원/달러 환율 (KRW/USD)</span>
-              <span class="num-font font-bold text-slate-200">1,348.50 <span class="text-rose-400 text-[10px]">-2.1원</span></span>
-            </div>
-          </div>
         </div>
 
-        <div class="mt-4 text-[11px] text-slate-400 text-center border-t border-slate-800 pt-3">
-          💡 Gemini Pro는 시장 위험지수에 따라 자동으로 가중치를 조절합니다.
+        <!-- AI Macro Target Asset Allocation -->
+        <div class="card p-4">
+            <div class="text-xs text-slate-400 flex justify-between">
+                <span>AI 권장 자산배분</span>
+                <span class="text-purple-400">AI 추천</span>
+            </div>
+            <div class="text-sm font-semibold text-white mt-2 flex justify-between">
+                <span>빅테크 45%</span>
+                <span>배당/커버드콜 30%</span>
+                <span>국채 25%</span>
+            </div>
+            <div class="w-full bg-slate-700 h-2 rounded-full mt-2 overflow-hidden flex">
+                <div class="bg-blue-500 h-full" style="width: 45%"></div>
+                <div class="bg-amber-500 h-full" style="width: 30%"></div>
+                <div class="bg-purple-500 h-full" style="width: 25%"></div>
+            </div>
         </div>
-      </div>
+    </div>
 
-    </section>
+    <!-- Main Content Area -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left 2 Columns: Charts & Visuals -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Real-Time Yield & FX Adjusted Stock Trend -->
+            <div class="card p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-md font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-blue-400"></i> AI 환율 반응형 S&P500 / 나스닥 수익률 추이 (원화 환산)
+                    </h2>
+                    <div class="flex gap-2">
+                        <button class="px-2 py-1 text-xs card bg-blue-600/30 text-blue-400 border-blue-500">USD 기준</button>
+                        <button class="px-2 py-1 text-xs card text-slate-400">KRW 환산 기준</button>
+                    </div>
+                </div>
+                <div class="h-64">
+                    <canvas id="marketChart"></canvas>
+                </div>
+            </div>
 
-  </main>
+            <!-- Macro & FX Sensitivity Matrix -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="card p-4">
+                    <h3 class="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-amber-400"></i> 미 국채 금리 커브 (Yield Curve)
+                    </h3>
+                    <div class="h-44">
+                        <canvas id="yieldCurveChart"></canvas>
+                    </div>
+                </div>
+                <div class="card p-4">
+                    <h3 class="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-emerald-400"></i> VIX / 공포지수 AI 감도
+                    </h3>
+                    <div class="flex flex-col items-center justify-center h-44">
+                        <div class="text-4xl font-extrabold text-amber-400 mb-2">18.45</div>
+                        <p class="text-xs text-slate-400 text-center">현재 시장: <span class="text-emerald-400 font-bold">중립적 안정</span></p>
+                        <div class="w-full bg-slate-700 h-3 rounded-full mt-4 relative overflow-hidden">
+                            <div class="bg-gradient-to-r from-emerald-500 via-amber-500 to-red-500 h-full"></div>
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1">공포 (0) ------------------- 중립 ------------------- 탐욕 (100)</span>
+                    </div>
+                </div>
+            </div>
 
-  <!-- Interactive JavaScript Application Logic -->
-  <script>
-    function dashboardApp() {
-      return {
-        isLoading: false,
-        currentTime: '',
-        timeframe: '1W',
+        </div>
 
-        // Core Dashboard Metrics Data
-        metrics: {
-          sp500: { val: '5,815.20', change: 0.42 },
-          nasdaq: { val: '18,367.10', change: 0.83 },
-          us2y: { val: '3.94', change: -3.1 },
-          us10y: { val: '4.08', change: -2.4 },
-          us30y: { val: '4.36', change: 1.2 },
-          spread10_2: { val: 0.14 },
-          dxy: { val: '102.85', change: 0.12 },
-          vix: { val: '16.42', change: -3.15 },
-          gold: { val: '2,658.40', change: 0.65 }
-        },
+        <!-- Right Column: AI Insights & Economic Calendar for Korean Investors -->
+        <div class="space-y-6">
+            
+            <!-- AI Agent Macro Report for Korean Investors -->
+            <div class="card p-5 border-blue-500/30">
+                <h2 class="text-md font-bold text-blue-400 flex items-center gap-2 mb-3">
+                    <i class="fa-solid fa-robot"></i> AI 미장 브리핑 & 액션
+                </h2>
+                <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+                    <div class="p-3 bg-slate-800/60 rounded-lg border border-slate-700">
+                        <strong class="text-emerald-400 block mb-1">💡 AI 환율 대응 전략</strong>
+                        원/달러 환율이 상승 구간에 진입함에 따라, **환노출형 미국 빅테크 ETF**의 원화 평가 수익률이 우수합니다. 추가 매수 시에는 환헤지(H) 자산을 혼합하세요.
+                    </div>
+                    <div class="p-3 bg-slate-800/60 rounded-lg border border-slate-700">
+                        <strong class="text-amber-400 block mb-1">🌙 한국 밤 시간(시차) 변동성 대비</strong>
+                        이번 주 FOMC 및 CPI 발표 시 밤 9시 30분~새벽 4시 사이의 변동성에 대비하여 **자동 스탑로스(Stop-loss)** 지정을 권장합니다.
+                    </div>
+                </div>
+            </div>
 
-        yieldChart: null,
-        assetChart: null,
+            <!-- KOR Time Zone Weekly Key Schedule -->
+            <div class="card p-5">
+                <h2 class="text-md font-bold text-slate-200 flex items-center gap-2 mb-4">
+                    <i class="fa-regular fa-calendar-check text-purple-400"></i> 한국 시간 기준 주요 일시
+                </h2>
+                <div class="space-y-3 text-xs">
+                    <div class="flex justify-between items-center p-2 bg-slate-800/40 rounded border border-slate-700/50">
+                        <div>
+                            <div class="font-semibold text-slate-200">미국 CPI (소비자물가지수)</div>
+                            <div class="text-[10px] text-slate-400">목요일 밤 21:30 (KST)</div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 font-bold">고위험</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-slate-800/40 rounded border border-slate-700/50">
+                        <div>
+                            <div class="font-semibold text-slate-200">FOMC 금리 결정</div>
+                            <div class="text-[10px] text-slate-400">금요일 새벽 03:00 (KST)</div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 font-bold">초고위험</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-slate-800/40 rounded border border-slate-700/50">
+                        <div>
+                            <div class="font-semibold text-slate-200">엔비디아(NVDA) 실적 발표</div>
+                            <div class="text-[10px] text-slate-400">금요일 새벽 06:00 (KST)</div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold">관심</span>
+                    </div>
+                </div>
+            </div>
 
-        init() {
-          this.updateClock();
-          setInterval(() => this.updateClock(), 1000);
+        </div>
 
-          // Render Chart.js visualizers
-          this.$nextTick(() => {
-            this.initYieldCurveChart();
-            this.initMultiAssetChart();
-          });
-        },
+    </div>
 
-        updateClock() {
-          const now = new Date();
-          this.currentTime = now.toUTCString().split(' ')[4] + ' UTC';
-        },
-
-        refreshData() {
-          this.isLoading = true;
-          setTimeout(() => {
-            this.isLoading = false;
-            // Simulated subtle price fluctuations for live feeling
-            this.metrics.vix.val = (16.0 + Math.random() * 0.8).toFixed(2);
-            this.metrics.us10y.val = (4.05 + Math.random() * 0.05).toFixed(2);
-          }, 800);
-        },
-
-        setTimeframe(tf) {
-          this.timeframe = tf;
-          this.updateMultiAssetChartData(tf);
-        },
-
-        // Yield Curve Line Chart Initialization
-        initYieldCurveChart() {
-          const ctx = document.getElementById('yieldCurveChart').getContext('2d');
-          this.yieldChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: ['1M', '3M', '6M', '1Y', '2Y (3.94%)', '5Y', '10Y (4.08%)', '30Y (4.36%)'],
-              datasets: [{
-                label: '현재 수익률 곡선 (Yield Curve)',
-                data: [5.12, 4.98, 4.65, 4.20, 3.94, 3.98, 4.08, 4.36],
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#60a5fa',
-                pointRadius: 5
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { display: false },
-                tooltip: {
-                  callbacks: {
-                    label: (context) => ` 수익률: ${context.parsed.y}%`
-                  }
-                }
-              },
-              scales: {
-                y: {
-                  grid: { color: '#1e293b' },
-                  ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono' } }
-                },
-                x: {
-                  grid: { color: '#1e293b' },
-                  ticks: { color: '#94a3b8', font: { size: 10 } }
-                }
-              }
-            }
-          });
-        },
-
-        // Normalized Asset Comparison Chart Initialization
-        initMultiAssetChart() {
-          const ctx = document.getElementById('multiAssetChart').getContext('2d');
-          this.assetChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Today'],
-              datasets: [
-                {
-                  label: 'S&P 500',
-                  data: [0, 0.2, -0.1, 0.5, 0.3, 0.8, 1.2],
-                  borderColor: '#3b82f6',
-                  borderWidth: 2,
-                  tension: 0.3,
-                  pointRadius: 0
-                },
-                {
-                  label: '나스닥',
-                  data: [0, 0.5, -0.3, 0.8, 0.6, 1.4, 2.1],
-                  borderColor: '#34d399',
-                  borderWidth: 2,
-                  tension: 0.3,
-                  pointRadius: 0
-                },
-                {
-                  label: '달러인덱스',
-                  data: [0, -0.1, 0.2, 0.1, 0.4, 0.3, 0.25],
-                  borderColor: '#c084fc',
-                  borderWidth: 2,
-                  tension: 0.3,
-                  pointRadius: 0
-                },
-                {
-                  label: '금 (Gold)',
-                  data: [0, 0.4, 0.8, 0.6, 1.1, 1.5, 1.8],
-                  borderColor: '#fbbf24',
-                  borderWidth: 2,
-                  tension: 0.3,
-                  pointRadius: 0
-                }
-              ]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { display: false }
-              },
-              scales: {
-                y: {
-                  grid: { color: '#1e293b' },
-                  ticks: {
-                    color: '#94a3b8',
-                    font: { family: 'JetBrains Mono' },
-                    callback: (val) => (val > 0 ? '+' : '') + val + '%'
-                  }
-                },
-                x: {
-                  grid: { color: '#1e293b' },
-                  ticks: { color: '#94a3b8' }
-                }
-              }
-            }
-          });
-        },
-
-        updateMultiAssetChartData(tf) {
-          if (!this.assetChart) return;
-          // Dynamically adjust scale simulated based on timeframe selection
-          let mult = tf === '1D' ? 0.3 : tf === '1W' ? 1.0 : tf === '1M' ? 2.5 : 5.0;
-          this.assetChart.data.datasets[0].data = [0, 0.2*mult, -0.1*mult, 0.5*mult, 0.3*mult, 0.8*mult, 1.2*mult];
-          this.assetChart.data.datasets[1].data = [0, 0.5*mult, -0.3*mult, 0.8*mult, 0.6*mult, 1.4*mult, 2.1*mult];
-          this.assetChart.update();
+    <script>
+        // Set Current Korean Time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').innerText = 'KST ' + now.toLocaleString('ko-KR');
         }
-      }
-    }
-  </script>
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Main Market Chart
+        const ctxMarket = document.getElementById('marketChart').getContext('2d');
+        new Chart(ctxMarket, {
+            type: 'line',
+            data: {
+                labels: ['월', '화', '수', '목', '금', '오늘(야간)'],
+                datasets: [{
+                    label: 'S&P 500 (원화 환산)',
+                    data: [5100, 5120, 5090, 5150, 5180, 5210],
+                    borderColor: '#3b82f6',
+                    tension: 0.3,
+                    fill: false
+                }, {
+                    label: 'S&P 500 (달러 기준)',
+                    data: [5100, 5110, 5070, 5120, 5140, 5160],
+                    borderColor: '#94a3b8',
+                    borderDash: [5, 5],
+                    tension: 0.3,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            }
+        });
+
+        // Yield Curve Chart
+        const ctxYield = document.getElementById('yieldCurveChart').getContext('2d');
+        new Chart(ctxYield, {
+            type: 'line',
+            data: {
+                labels: ['2년물', '10년물', '30년물'],
+                datasets: [{
+                    label: '국채 금리 (%)',
+                    data: [4.62, 4.22, 4.38],
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    fill: true,
+                    tension: 0.2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
-`
