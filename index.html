@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>US Market AI Investment Terminal - KOR Edition</title>
+    <title>US Market AI Investment & Simulation Terminal - KOR Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,6 +11,7 @@
         body { background-color: #0f172a; color: #f8fafc; font-family: 'Pretendard', system-ui, sans-serif; }
         .card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; }
         .glow { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+        input[type=range] { accent-color: #3b82f6; }
     </style>
 </head>
 <body class="p-4 md:p-6 space-y-6">
@@ -19,9 +20,9 @@
     <header class="flex flex-col md:flex-row justify-between items-start md:items-center card p-4 gap-4">
         <div>
             <h1 class="text-2xl font-bold text-blue-400 flex items-center gap-2">
-                <i class="fa-solid fa-brain"></i> 미장 AI 프론티어 터미널
+                <i class="fa-solid fa-brain"></i> 미장 AI 프론티어 & 시뮬레이션 터미널
             </h1>
-            <p class="text-xs text-slate-400 mt-1">한국 투자자를 위한 AI 환율 대응 · 야간 리스크 방어 · 세금 최적화 시스템</p>
+            <p class="text-xs text-slate-400 mt-1">한국 투자자를 위한 AI 환율 대응 · 야간 리스크 방어 · 실시간 AI 시뮬레이터</p>
         </div>
         <div class="flex items-center gap-3">
             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -32,9 +33,8 @@
         </div>
     </header>
 
-    <!-- Top KPI Grid: KOR US-Investor Specific Metrics -->
+    <!-- Top KPI Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- FX USD/KRW -->
         <div class="card p-4">
             <div class="text-xs text-slate-400 flex justify-between">
                 <span>원/달러 환율 (USD/KRW)</span>
@@ -47,20 +47,18 @@
             </div>
         </div>
 
-        <!-- Tax Harvesting AI -->
         <div class="card p-4">
             <div class="text-xs text-slate-400 flex justify-between">
                 <span>2026 양도소득세 추정액</span>
                 <span class="text-slate-400">공제: 250만 원</span>
             </div>
-            <div class="text-2xl font-bold text-amber-400 mt-2">₩ 1,420,000</div>
+            <div class="text-2xl font-bold text-amber-400 mt-2" id="kpi-tax-val">₩ 1,420,000</div>
             <div class="mt-2 text-xs text-slate-400 flex justify-between">
                 <span>AI 절세 가이드:</span>
-                <span class="text-emerald-400 underline cursor-pointer">손실확정(-₩120만) 조언</span>
+                <span class="text-emerald-400 underline cursor-pointer">손실확정 시뮬레이션 지원</span>
             </div>
         </div>
 
-        <!-- Night AI Risk Gauge -->
         <div class="card p-4">
             <div class="text-xs text-slate-400 flex justify-between">
                 <span>야간 시차 리스크 지수</span>
@@ -72,7 +70,6 @@
             </div>
         </div>
 
-        <!-- AI Macro Target Asset Allocation -->
         <div class="card p-4">
             <div class="text-xs text-slate-400 flex justify-between">
                 <span>AI 권장 자산배분</span>
@@ -91,29 +88,101 @@
         </div>
     </div>
 
+    <!-- MAIN INTERACTIVE AI SIMULATOR SECTION -->
+    <section class="card p-5 border-blue-500/40 glow">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-2">
+            <div>
+                <h2 class="text-lg font-bold text-blue-400 flex items-center gap-2">
+                    <i class="fa-solid fa-calculator"></i> AI 포트폴리오 & 환율·세금 통합 시뮬레이터
+                </h2>
+                <p class="text-xs text-slate-400">투자 조건 및 환율 변동, 절세 전략에 따른 시뮬레이션 결과를 실시간으로 확인하세요.</p>
+            </div>
+            <button onclick="runSimulation()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-2">
+                <i class="fa-solid fa-arrows-rotate"></i> 시뮬레이션 실행
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Controls Column -->
+            <div class="space-y-4 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                <h3 class="text-sm font-bold text-slate-200 border-b border-slate-700 pb-2">⚙️ 변수 설정 (Parameters)</h3>
+                
+                <!-- Capital -->
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-slate-400">초기 투자금 (USD)</span>
+                        <span class="text-blue-400 font-bold" id="val-capital">$ 50,000</span>
+                    </div>
+                    <input type="range" id="input-capital" min="5000" max="200000" step="5000" value="50000" oninput="updateSimInputs()" class="w-full">
+                </div>
+
+                <!-- Tech Allocation -->
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-slate-400">빅테크/스윙 비중 (%)</span>
+                        <span class="text-amber-400 font-bold" id="val-tech">50 %</span>
+                    </div>
+                    <input type="range" id="input-tech" min="10" max="90" step="5" value="50" oninput="updateSimInputs()" class="w-full">
+                </div>
+
+                <!-- Target FX Rate -->
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-slate-400">목표 시점 원/달러 환율</span>
+                        <span class="text-emerald-400 font-bold" id="val-fx">1,350 KRW</span>
+                    </div>
+                    <input type="range" id="input-fx" min="1200" max="1550" step="10" value="1350" oninput="updateSimInputs()" class="w-full">
+                </div>
+
+                <!-- Loss Realization for Tax -->
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-slate-400">절세용 실현 손실액 (KRW)</span>
+                        <span class="text-purple-400 font-bold" id="val-loss">₩ 1,000,000</span>
+                    </div>
+                    <input type="range" id="input-loss" min="0" max="5000000" step="250000" value="1000000" oninput="updateSimInputs()" class="w-full">
+                </div>
+            </div>
+
+            <!-- Simulation Chart Column -->
+            <div class="lg:col-span-2 space-y-4">
+                <div class="h-60">
+                    <canvas id="simChart"></canvas>
+                </div>
+                
+                <!-- Output Results Summary Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+                    <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700">
+                        <div class="text-[11px] text-slate-400">예상 평가 자산 (원화)</div>
+                        <div class="text-lg font-bold text-blue-400 mt-1" id="res-total-krw">₩ 78,250,000</div>
+                    </div>
+                    <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700">
+                        <div class="text-[11px] text-slate-400">환차손익 영향액</div>
+                        <div class="text-lg font-bold text-amber-400 mt-1" id="res-fx-impact">- ₩ 1,775,000</div>
+                    </div>
+                    <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700">
+                        <div class="text-[11px] text-slate-400">절세 적용 후 세금</div>
+                        <div class="text-lg font-bold text-emerald-400 mt-1" id="res-final-tax">₩ 840,000</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Main Content Area -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Left 2 Columns: Charts & Visuals -->
         <div class="lg:col-span-2 space-y-6">
-            
-            <!-- Real-Time Yield & FX Adjusted Stock Trend -->
             <div class="card p-5">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-md font-bold text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-line text-blue-400"></i> AI 환율 반응형 S&P500 / 나스닥 수익률 추이 (원화 환산)
+                        <i class="fa-solid fa-chart-line text-blue-400"></i> AI 환율 반응형 S&P500 / 나스닥 수익률 추이
                     </h2>
-                    <div class="flex gap-2">
-                        <button class="px-2 py-1 text-xs card bg-blue-600/30 text-blue-400 border-blue-500">USD 기준</button>
-                        <button class="px-2 py-1 text-xs card text-slate-400">KRW 환산 기준</button>
-                    </div>
                 </div>
                 <div class="h-64">
                     <canvas id="marketChart"></canvas>
                 </div>
             </div>
 
-            <!-- Macro & FX Sensitivity Matrix -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="card p-4">
                     <h3 class="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
@@ -137,13 +206,9 @@
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- Right Column: AI Insights & Economic Calendar for Korean Investors -->
         <div class="space-y-6">
-            
-            <!-- AI Agent Macro Report for Korean Investors -->
             <div class="card p-5 border-blue-500/30">
                 <h2 class="text-md font-bold text-blue-400 flex items-center gap-2 mb-3">
                     <i class="fa-solid fa-robot"></i> AI 미장 브리핑 & 액션
@@ -155,12 +220,11 @@
                     </div>
                     <div class="p-3 bg-slate-800/60 rounded-lg border border-slate-700">
                         <strong class="text-amber-400 block mb-1">🌙 한국 밤 시간(시차) 변동성 대비</strong>
-                        이번 주 FOMC 및 CPI 발표 시 밤 9시 30분~새벽 4시 사이의 변동성에 대비하여 **자동 스탑로스(Stop-loss)** 지정을 권장합니다.
+                        주요 경제 지표 발표 시 밤 9시 30분~새벽 4시 사이의 변동성에 대비하여 **자동 스탑로스(Stop-loss)** 지정을 권장합니다.
                     </div>
                 </div>
             </div>
 
-            <!-- KOR Time Zone Weekly Key Schedule -->
             <div class="card p-5">
                 <h2 class="text-md font-bold text-slate-200 flex items-center gap-2 mb-4">
                     <i class="fa-regular fa-calendar-check text-purple-400"></i> 한국 시간 기준 주요 일시
@@ -180,22 +244,12 @@
                         </div>
                         <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 font-bold">초고위험</span>
                     </div>
-                    <div class="flex justify-between items-center p-2 bg-slate-800/40 rounded border border-slate-700/50">
-                        <div>
-                            <div class="font-semibold text-slate-200">엔비디아(NVDA) 실적 발표</div>
-                            <div class="text-[10px] text-slate-400">금요일 새벽 06:00 (KST)</div>
-                        </div>
-                        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold">관심</span>
-                    </div>
                 </div>
             </div>
-
         </div>
-
     </div>
 
     <script>
-        // Set Current Korean Time
         function updateTime() {
             const now = new Date();
             document.getElementById('current-time').innerText = 'KST ' + now.toLocaleString('ko-KR');
@@ -203,63 +257,29 @@
         setInterval(updateTime, 1000);
         updateTime();
 
-        // Main Market Chart
-        const ctxMarket = document.getElementById('marketChart').getContext('2d');
-        new Chart(ctxMarket, {
-            type: 'line',
-            data: {
-                labels: ['월', '화', '수', '목', '금', '오늘(야간)'],
-                datasets: [{
-                    label: 'S&P 500 (원화 환산)',
-                    data: [5100, 5120, 5090, 5150, 5180, 5210],
-                    borderColor: '#3b82f6',
-                    tension: 0.3,
-                    fill: false
-                }, {
-                    label: 'S&P 500 (달러 기준)',
-                    data: [5100, 5110, 5070, 5120, 5140, 5160],
-                    borderColor: '#94a3b8',
-                    borderDash: [5, 5],
-                    tension: 0.3,
-                    fill: false
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#94a3b8' } } },
-                scales: {
-                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
-                }
-            }
-        });
+        // Chart Initialization
+        let simChart, marketChart, yieldCurveChart;
 
-        // Yield Curve Chart
-        const ctxYield = document.getElementById('yieldCurveChart').getContext('2d');
-        new Chart(ctxYield, {
-            type: 'line',
-            data: {
-                labels: ['2년물', '10년물', '30년물'],
-                datasets: [{
-                    label: '국채 금리 (%)',
-                    data: [4.62, 4.22, 4.38],
-                    borderColor: '#f59e0b',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                    fill: true,
-                    tension: 0.2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
-                }
-            }
-        });
-    </script>
-</body>
-</html>
+        function updateSimInputs() {
+            const capital = parseInt(document.getElementById('input-capital').value);
+            const tech = parseInt(document.getElementById('input-tech').value);
+            const fx = parseInt(document.getElementById('input-fx').value);
+            const loss = parseInt(document.getElementById('input-loss').value);
+
+            document.getElementById('val-capital').innerText = '$ ' + capital.toLocaleString();
+            document.getElementById('val-tech').innerText = tech + ' %';
+            document.getElementById('val-fx').innerText = fx.toLocaleString() + ' KRW';
+            document.getElementById('val-loss').innerText = '₩ ' + loss.toLocaleString();
+
+            runSimulation();
+        }
+
+        function runSimulation() {
+            const capital = parseInt(document.getElementById('input-capital').value);
+            const tech = parseInt(document.getElementById('input-tech').value) / 100;
+            const fx = parseInt(document.getElementById('input-fx').value);
+            const loss = parseInt(document.getElementById('input-loss').value);
+
+            // Simulation Logic
+            const currentFx = 1385.5;
+            const expectedReturnRate = (tech * 0.18) + ((1 - tech) * 0.06
