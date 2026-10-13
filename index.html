@@ -181,33 +181,4 @@
 
     <script>
         var masterReportDB = {
-            'BTC-USD': { mkt: 'CRYPTO', name: '비트코인', price: 83123, targetNum: 92000, targetText: '$92,000 (+10.7%)', stopNum: 79500, stopText: '$79,500 (-4.4%)', rrRatio: '1 : 2.43', status: 'PASS', history: [78000, 79200, 80500, 81200, 80800, 82400, 83123], ma20: 81000, ma60: 78500 },
-            'NVDA': { mkt: 'US', name: '엔비디아', price: 227.27, targetNum: 243.0, targetText: '$243.00 (+6.9%)', stopNum: 205.0, stopText: '$205.00 (-9.8%)', rrRatio: '1 : 1.71', status: 'PASS', history: [210, 215, 218, 222, 220, 225, 227.27], ma20: 219, ma60: 210 },
-            'AAPL': { mkt: 'US', name: '애플', price: 343.93, targetNum: 365.0, targetText: '$365.00 (+6.1%)', stopNum: 328.0, stopText: '$328.00 (-4.6%)', rrRatio: '1 : 1.32', status: 'PASS', history: [320, 325, 332, 338, 336, 340, 343.93], ma20: 335, ma60: 322 },
-            '005930': { mkt: 'KR', name: '삼성전자', price: 232000, targetNum: 265000, targetText: '265,000원 (+14.2%)', stopNum: 215000, stopText: '215,000원 (-7.3%)', rrRatio: '1 : 1.94', status: 'HOLD', history: [270000, 265000, 258000, 248000, 242000, 235000, 232000], ma20: 255000, ma60: 268000 },
-            'TSLA': { mkt: 'US', name: '테슬라', price: 374.86, targetNum: 410.0, targetText: '$410.00 (+9.4%)', stopNum: 345.0, stopText: '$345.00 (-8.0%)', rrRatio: '1 : 1.18', status: 'PASS', history: [350, 362, 358, 370, 365, 372, 374.86], ma20: 362, ma60: 355 },
-            '000660': { mkt: 'KR', name: 'SK하이닉스', price: 1443000, targetNum: 1650000, targetText: '1,650,000원 (+14.3%)', stopNum: 1350000, stopText: '1,350,000원 (-6.4%)', rrRatio: '1 : 2.23', status: 'FAIL', history: [1680000, 1620000, 1580000, 1510000, 1480000, 1460000, 1443000], ma20: 1560000, ma60: 1620000 },
-            'MSFT': { mkt: 'US', name: '마이크로소프트', price: 448.50, targetNum: 490.0, targetText: '$490.00 (+9.25%)', stopNum: 425.0, stopText: '$425.00 (-5.2%)', rrRatio: '1 : 1.76', status: 'PASS', history: [420, 428, 435, 440, 438, 442, 448.5], ma20: 438, ma60: 425 },
-            'AMZN': { mkt: 'US', name: '아마존', price: 186.20, targetNum: 210.0, targetText: '$210.00 (+12.7%)', stopNum: 175.0, stopText: '$175.00 (-6.0%)', rrRatio: '1 : 2.11', status: 'PASS', history: [172, 176, 180, 182, 181, 184, 186.2], ma20: 180, ma60: 174 }
-        };
-
-        // Recommended Basket based on Wall Street Momentum Research
-        var aiRecommendedList = ["BTC-USD", "NVDA", "AAPL", "MSFT", "AMZN", "TSLA", "005930", "000660"];
-
-        var selectedTicker = null;
-
-        function updateTime() {
-            var now = new Date();
-            var el = document.getElementById('current-time');
-            if (el) el.innerText = 'KST ' + now.toLocaleString('ko-KR');
-        }
-        setInterval(updateTime, 1000);
-
-        function saveStorage() {
-            var tickerVal = document.getElementById('ticker-input').value;
-            localStorage.setItem('swing_tickers', tickerVal);
-
-            var entries = {};
-            var inputs = document.querySelectorAll('input[id^="entry-"]');
-            inputs.forEach(function(input) {
-                var t = input.
+            'BTC-USD': { mkt: 'CRYPTO', name: '비트코인', price: 83123, targetNum: 92000, targetText: '$92,000 (+10.7%)', stopNum: 79500, stopText: '$79,500 (-4.4%)', rrRatio: '1 : 2.43', status: 'PASS',
