@@ -27,7 +27,7 @@
         <div class="flex items-center gap-3">
             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-ping"></span>
-                실시간 야간 프림마켓 동계 중
+                실시간 야간 프림마켓 동작 중
             </span>
             <span class="text-xs text-slate-400" id="current-time"></span>
         </div>
@@ -40,7 +40,7 @@
                 <span>원/달러 환율 (USD/KRW)</span>
                 <span class="text-emerald-400 font-bold">+0.42%</span>
             </div>
-            <div class="text-2xl font-bold text-white mt-2" id="fx-rate">1,385.50 KRW</div>
+            <div class="text-2xl font-bold text-white mt-2">1,385.50 KRW</div>
             <div class="mt-2 text-xs text-slate-400 flex justify-between">
                 <span>AI 환율전망: <strong class="text-blue-400">단기 상방 압력</strong></span>
                 <span>적정 환헤지 비중: <strong class="text-amber-400">35%</strong></span>
@@ -52,7 +52,7 @@
                 <span>2026 양도소득세 추정액</span>
                 <span class="text-slate-400">공제: 250만 원</span>
             </div>
-            <div class="text-2xl font-bold text-amber-400 mt-2" id="kpi-tax-val">₩ 1,420,000</div>
+            <div class="text-2xl font-bold text-amber-400 mt-2">₩ 1,420,000</div>
             <div class="mt-2 text-xs text-slate-400 flex justify-between">
                 <span>AI 절세 가이드:</span>
                 <span class="text-emerald-400 underline cursor-pointer">손실확정 시뮬레이션 지원</span>
@@ -73,7 +73,7 @@
         <div class="card p-4">
             <div class="text-xs text-slate-400 flex justify-between">
                 <span>스윙 스캐너 상태</span>
-                <span class="text-purple-400 font-bold">포착 종목 3개</span>
+                <span class="text-purple-400 font-bold" id="kpi-scan-count">포착 종목 - 개</span>
             </div>
             <div class="text-sm font-semibold text-white mt-2 flex justify-between">
                 <span>추세 정배열: 20/60MA</span>
@@ -85,35 +85,40 @@
         </div>
     </div>
 
-    <!-- SWING SCANNER & PORTFOLIO MANAGER SECTION -->
+    <!-- SWING SCANNER & TICKER INPUT SECTION -->
     <section class="card p-5 border-emerald-500/30">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
             <div>
                 <h2 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
                     <i class="fa-solid fa-crosshairs"></i> Swing Scanner 분석 및 보유 종목 매도 가이드
                 </h2>
-                <p class="text-xs text-slate-400">이동평균선 정배열(20>60), 거래량 급증, ATR 기반 손절/목표가를 자동 산출합니다.</p>
+                <p class="text-xs text-slate-400">티커를 공백이나 쉼표로 구분해 입력 후 스캔 버튼을 누르세요. (예: NVDA AAPL 005930 TSLA)</p>
             </div>
-            <div class="flex gap-2">
-                <button onclick="runSwingScanner()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
-                    <i class="fa-solid fa-bolt"></i> 스윙 조건 스캔
+            <div class="flex gap-2 w-full md:w-auto">
+                <button onclick="runSwingScanner()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 w-full md:w-auto justify-center">
+                    <i class="fa-solid fa-bolt"></i> 스윙 분석 실행
                 </button>
             </div>
+        </div>
+
+        <!-- Ticker Input Area -->
+        <div class="mb-4">
+            <input type="text" id="ticker-input" value="NVDA AAPL 005930 TSLA MSFT" placeholder="티커 입력 (예: NVDA AAPL 005930)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
         </div>
 
         <div class="overflow-x-auto">
             <table class="w-full text-xs text-left text-slate-300">
                 <thead class="bg-slate-800/80 text-slate-400 border-b border-slate-700">
                     <tr>
-                        <th class="p-2">시장</th>
-                        <th class="p-2">티커</th>
-                        <th class="p-2">종목명</th>
-                        <th class="p-2">스윙 신호</th>
-                        <th class="p-2">현재가</th>
-                        <th class="p-2">손절가 (Stop)</th>
-                        <th class="p-2">목표가 (Target)</th>
-                        <th class="p-2">평단가 입력</th>
-                        <th class="p-2">매도 판단</th>
+                        <th class="p-2.5">시장</th>
+                        <th class="p-2.5">티커</th>
+                        <th class="p-2.5">종목명</th>
+                        <th class="p-2.5">스윙 신호</th>
+                        <th class="p-2.5">현재가</th>
+                        <th class="p-2.5">손절가 (Stop)</th>
+                        <th class="p-2.5">목표가 (Target)</th>
+                        <th class="p-2.5">평단가 입력</th>
+                        <th class="p-2.5">매도 판단</th>
                     </tr>
                 </thead>
                 <tbody id="swing-table-body" class="divide-y divide-slate-800">
@@ -130,10 +135,10 @@
                 <h2 class="text-lg font-bold text-blue-400 flex items-center gap-2">
                     <i class="fa-solid fa-calculator"></i> AI 포트폴리오 & 환율·세금 통합 시뮬레이터
                 </h2>
-                <p class="text-xs text-slate-400">투자 조건 및 환율 변동, 절세 전략에 따른 시뮬레이션 결과를 실시간으로 확인하세요.</p>
+                <p class="text-xs text-slate-400">슬라이더 조작 시 하단 평가 자산과 차트가 실시간으로 변동됩니다.</p>
             </div>
             <button onclick="runSimulation()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-2">
-                <i class="fa-solid fa-arrows-rotate"></i> 시뮬레이션 실행
+                <i class="fa-solid fa-arrows-rotate"></i> 시뮬레이션 계산
             </button>
         </div>
 
@@ -171,21 +176,21 @@
             </div>
 
             <div class="lg:col-span-2 space-y-4">
-                <div class="h-60">
+                <div class="h-60 relative">
                     <canvas id="simChart"></canvas>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
                     <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700">
                         <div class="text-[11px] text-slate-400">예상 평가 자산 (원화)</div>
-                        <div class="text-lg font-bold text-blue-400 mt-1" id="res-total-krw">₩ 78,250,000</div>
+                        <div class="text-lg font-bold text-blue-400 mt-1" id="res-total-krw">₩ 0</div>
                     </div>
                     <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700">
                         <div class="text-[11px] text-slate-400">환차손익 영향액</div>
-                        <div class="text-lg font-bold text-amber-400 mt-1" id="res-fx-impact">- ₩ 1,775,000</div>
+                        <div class="text-lg font-bold text-amber-400 mt-1" id="res-fx-impact">₩ 0</div>
                     </div>
                     <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700">
                         <div class="text-[11px] text-slate-400">절세 적용 후 세금</div>
-                        <div class="text-lg font-bold text-emerald-400 mt-1" id="res-final-tax">₩ 840,000</div>
+                        <div class="text-lg font-bold text-emerald-400 mt-1" id="res-final-tax">₩ 0</div>
                     </div>
                 </div>
             </div>
@@ -201,7 +206,7 @@
                         <i class="fa-solid fa-chart-line text-blue-400"></i> AI 환율 반응형 S&P500 / 나스닥 수익률 추이
                     </h2>
                 </div>
-                <div class="h-64">
+                <div class="h-64 relative">
                     <canvas id="marketChart"></canvas>
                 </div>
             </div>
@@ -211,7 +216,7 @@
                     <h3 class="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
                         <i class="fa-solid fa-sliders text-amber-400"></i> 미 국채 금리 커브 (Yield Curve)
                     </h3>
-                    <div class="h-44">
+                    <div class="h-44 relative">
                         <canvas id="yieldCurveChart"></canvas>
                     </div>
                 </div>
@@ -221,196 +226,4 @@
                     </h3>
                     <div class="flex flex-col items-center justify-center h-44">
                         <div class="text-4xl font-extrabold text-amber-400 mb-2">18.45</div>
-                        <p class="text-xs text-slate-400 text-center">현재 시장: <span class="text-emerald-400 font-bold">중립적 안정</span></p>
-                        <div class="w-full bg-slate-700 h-3 rounded-full mt-4 relative overflow-hidden">
-                            <div class="bg-gradient-to-r from-emerald-500 via-amber-500 to-red-500 h-full"></div>
-                        </div>
-                        <span class="text-[10px] text-slate-400 mt-1">공포 (0) ------------------- 중립 ------------------- 탐욕 (100)</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="space-y-6">
-            <div class="card p-5 border-blue-500/30">
-                <h2 class="text-md font-bold text-blue-400 flex items-center gap-2 mb-3">
-                    <i class="fa-solid fa-robot"></i> AI 미장 브리핑 & 액션
-                </h2>
-                <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
-                    <div class="p-3 bg-slate-800/60 rounded-lg border border-slate-700">
-                        <strong class="text-emerald-400 block mb-1">💡 AI 환율 대응 전략</strong>
-                        원/달러 환율이 상승 구간에 진입함에 따라, **환노출형 미국 빅테크 ETF**의 원화 평가 수익률이 우수합니다.
-                    </div>
-                    <div class="p-3 bg-slate-800/60 rounded-lg border border-slate-700">
-                        <strong class="text-amber-400 block mb-1">🌙 야간 변동성 스탑로스 가이드</strong>
-                        스 스캐너가 포착한 종목의 경우 **ATR 1.8배 하단 손절선**을 미리 걸어두는 것을 권장합니다.
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function updateTime() {
-            const now = new Date();
-            document.getElementById('current-time').innerText = 'KST ' + now.toLocaleString('ko-KR');
-        }
-        setInterval(updateTime, 1000);
-        updateTime();
-
-        // Sample Universe Data
-        const swingUniverse = [
-            { mkt: 'US', ticker: 'NVDA', name: '엔비디아', close: 128.5, atr: 4.2, ma20: 122.0, ma60: 115.0, volSpike: 1.8 },
-            { mkt: 'US', ticker: 'AAPL', name: '애플', close: 224.2, atr: 3.5, ma20: 220.0, ma60: 212.0, volSpike: 1.2 },
-            { mkt: 'KR', ticker: '005930', name: '삼성전자', close: 78500, atr: 1400, ma20: 77000, ma60: 75000, volSpike: 1.6 },
-            { mkt: 'US', ticker: 'TSLA', name: '테슬라', close: 248.0, atr: 11.0, ma20: 230.0, ma60: 210.0, volSpike: 2.1 }
-        ];
-
-        function runSwingScanner() {
-            const tbody = document.getElementById('swing-table-body');
-            tbody.innerHTML = '';
-
-            swingUniverse.forEach((item, idx) => {
-                const isCand = (item.ma20 > item.ma60) && (item.close > item.ma20) && (item.volSpike >= 1.5);
-                const stopDist = 1.8 * item.atr;
-                const stopPrice = item.close - stopDist;
-                const targetPrice = item.close + (stopDist * 2);
-
-                const currFmt = item.mkt === 'KR' ? '₩' + item.close.toLocaleString() : '$' + item.close.toFixed(2);
-                const stopFmt = item.mkt === 'KR' ? '₩' + Math.round(stopPrice).toLocaleString() : '$' + stopPrice.toFixed(2);
-                const targetFmt = item.mkt === 'KR' ? '₩' + Math.round(targetPrice).toLocaleString() : '$' + targetPrice.toFixed(2);
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[10px] ${item.mkt === 'KR' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'}">${item.mkt}</span></td>
-                    <td class="p-2 font-bold">${item.ticker}</td>
-                    <td class="p-2">${item.name}</td>
-                    <td class="p-2">${isCand ? '<span class="text-emerald-400 font-bold">🟢 O (포착)</span>' : '<span class="text-slate-500">⚪ X</span>'}</td>
-                    <td class="p-2 font-semibold text-white">${currFmt}</td>
-                    <td class="p-2 text-red-400">${stopFmt}</td>
-                    <td class="p-2 text-emerald-400">${targetFmt}</td>
-                    <td class="p-2"><input type="number" id="entry-${idx}" placeholder="평단가" oninput="calcSellSignal(${idx}, ${item.close})" class="w-20 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-white"></td>
-                    <td class="p-2 font-bold" id="signal-${idx}">-</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function calcSellSignal(idx, currentClose) {
-            const entryInput = document.getElementById(`entry-${idx}`).value;
-            const sigTd = document.getElementById(`signal-${idx}`);
-            if (!entryInput || entryInput <= 0) {
-                sigTd.innerHTML = '-';
-                return;
-            }
-            const entry = parseFloat(entryInput);
-            const profitPct = ((currentClose - entry) / entry) * 100;
-
-            if (profitPct <= -5) {
-                sigTd.innerHTML = `<span class="text-red-400">🔴 SELL (${profitPct.toFixed(1)}%)</span>`;
-            } else if (profitPct >= 15) {
-                sigTd.innerHTML = `<span class="text-emerald-400">🟢 TAKE (${profitPct.toFixed(1)}%)</span>`;
-            } else {
-                sigTd.innerHTML = `<span class="text-slate-300">⚪ HOLD (${profitPct.toFixed(1)}%)</span>`;
-            }
-        }
-
-        let simChart, marketChart, yieldCurveChart;
-
-        function updateSimInputs() {
-            const capital = parseInt(document.getElementById('input-capital').value);
-            const tech = parseInt(document.getElementById('input-tech').value);
-            const fx = parseInt(document.getElementById('input-fx').value);
-            const loss = parseInt(document.getElementById('input-loss').value);
-
-            document.getElementById('val-capital').innerText = '$ ' + capital.toLocaleString();
-            document.getElementById('val-tech').innerText = tech + ' %';
-            document.getElementById('val-fx').innerText = fx.toLocaleString() + ' KRW';
-            document.getElementById('val-loss').innerText = '₩ ' + loss.toLocaleString();
-
-            runSimulation();
-        }
-
-        function runSimulation() {
-            const capital = parseInt(document.getElementById('input-capital').value);
-            const tech = parseInt(document.getElementById('input-tech').value) / 100;
-            const fx = parseInt(document.getElementById('input-fx').value);
-            const loss = parseInt(document.getElementById('input-loss').value);
-
-            const currentFx = 1385.5;
-            const expectedReturnRate = (tech * 0.18) + ((1 - tech) * 0.06);
-            const months = [0, 3, 6, 9, 12];
-            
-            const usdValues = months.map(m => capital * Math.pow(1 + expectedReturnRate / 12, m));
-            const krwValues = usdValues.map(v => v * fx);
-
-            const finalUsd = usdValues[usdValues.length - 1];
-            const finalKrw = krwValues[krwValues.length - 1];
-            const fxImpact = (finalUsd * fx) - (finalUsd * currentFx);
-
-            const profitKrw = (finalUsd - capital) * fx;
-            const taxableProfit = Math.max(0, profitKrw - 2500000 - loss);
-            const tax = taxableProfit * 0.22;
-
-            document.getElementById('res-total-krw').innerText = '₩ ' + Math.round(finalKrw).toLocaleString();
-            document.getElementById('res-fx-impact').innerText = (fxImpact >= 0 ? '+ ₩ ' : '- ₩ ') + Math.abs(Math.round(fxImpact)).toLocaleString();
-            document.getElementById('res-final-tax').innerText = '₩ ' + Math.round(tax).toLocaleString();
-
-            if (simChart) {
-                simChart.data.datasets[0].data = krwValues.map(v => Math.round(v / 10000));
-                simChart.update();
-            } else {
-                const ctxSim = document.getElementById('simChart').getContext('2d');
-                simChart = new Chart(ctxSim, {
-                    type: 'line',
-                    data: {
-                        labels: ['현재', '3개월 후', '6개월 후', '9개월 후', '12개월 후'],
-                        datasets: [{
-                            label: 'AI 예상 자산 추이 (만 원)',
-                            data: krwValues.map(v => Math.round(v / 10000)),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            fill: true,
-                            tension: 0.3
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { labels: { color: '#94a3b8' } } },
-                        scales: {
-                            x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                            y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
-                        }
-                    }
-                });
-            }
-        }
-
-        window.onload = function() {
-            runSwingScanner();
-
-            const ctxMarket = document.getElementById('marketChart').getContext('2d');
-            marketChart = new Chart(ctxMarket, {
-                type: 'line',
-                data: {
-                    labels: ['월', '화', '수', '목', '금', '오늘(야간)'],
-                    datasets: [{
-                        label: 'S&P 500 (원화 환산)',
-                        data: [5100, 5120, 5090, 5150, 5180, 5210],
-                        borderColor: '#3b82f6',
-                        tension: 0.3,
-                        fill: false
-                    }, {
-                        label: 'S&P 500 (달러 기준)',
-                        data: [5100, 5110, 5070, 5120, 5140, 5160],
-                        borderColor: '#94a3b8',
-                        borderDash: [5, 5],
-                        tension: 0.3,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#94a3b8' }
+                        <p class="text-xs text-slate-400
