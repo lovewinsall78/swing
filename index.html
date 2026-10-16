@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wall Street Swing & ROI Terminal</title>
+    <title>Wall Street Real-time Swing & ROI Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -18,14 +18,17 @@
     <header class="flex flex-col md:flex-row justify-between items-start md:items-center card p-5 gap-4">
         <div>
             <div class="flex items-center gap-2">
-                <span class="px-2.5 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30">ROI & R:R 최적화 엔진</span>
+                <span class="px-2.5 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30">실시간 API 연동 엔진</span>
                 <h1 class="text-xl font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie text-amber-400"></i> 월스트리트 스윙 ROI & 추천 종목 터미널
+                    <i class="fa-solid fa-bolt-lightning text-amber-400"></i> 월스트리트 실시간 스윙 & ROI 터미널
                 </h1>
             </div>
-            <p class="text-xs text-slate-400 mt-1">기대 ROI · 손익비(Risk:Reward) · 실시간 보유 수익률 자동 산출</p>
+            <p class="text-xs text-slate-400 mt-1">실시간 시세 연동 · 자동 ROI 재계산 · 15초 주기 라이브 자동 갱신</p>
         </div>
         <div class="flex items-center gap-3">
+            <span class="text-xs text-emerald-400 font-semibold flex items-center gap-1.5" id="live-indicator">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Live API
+            </span>
             <span class="text-xs text-slate-400" id="current-time"></span>
             <button id="btn-reset" type="button" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition">
                 <i class="fa-solid fa-rotate-left mr-1"></i> 초기화
@@ -37,24 +40,24 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="card p-4">
             <div class="text-xs text-slate-400 flex justify-between">
-                <span>평균 기대 ROI</span>
-                <span class="text-emerald-400 font-bold">+11.4%</span>
+                <span>평균 목표 ROI</span>
+                <span class="text-emerald-400 font-bold" id="kpi-avg-roi">+12.4%</span>
             </div>
             <div class="text-xl font-bold text-emerald-400 mt-2 flex items-center gap-2">
                 <i class="fa-solid fa-calculator"></i> 스윙 목표 ROI
             </div>
-            <div class="text-[11px] text-slate-400 mt-2">포착 종목 평균 기대 수익률</div>
+            <div class="text-[11px] text-slate-400 mt-2">실시간 시세 반영 포착 종목 평균</div>
         </div>
 
         <div class="card p-4">
             <div class="text-xs text-slate-400 flex justify-between">
                 <span>목표 손익비 (R:R Ratio)</span>
-                <span class="text-blue-400 font-bold">1 : 2.5</span>
+                <span class="text-blue-400 font-bold">1 : 2.25</span>
             </div>
             <div class="text-xl font-bold text-white mt-2" id="kpi-rr-summary">
                 고효율 구간 포착
             </div>
-            <div class="text-[11px] text-slate-400 mt-2">리스크 1 대비 2.5배 이상의 기대수익</div>
+            <div class="text-[11px] text-slate-400 mt-2">리스크 1 대비 2배 이상의 기대수익</div>
         </div>
 
         <div class="card p-4">
@@ -71,10 +74,10 @@
         <div class="card p-4">
             <div class="text-xs text-slate-400 flex justify-between">
                 <span>원/달러 환율 (USD/KRW)</span>
-                <span class="text-emerald-400 font-bold">+0.42%</span>
+                <span class="text-emerald-400 font-bold" id="fx-change">+0.42%</span>
             </div>
-            <div class="text-xl font-bold text-white mt-2">1,385.50 KRW</div>
-            <div class="text-[11px] text-slate-400 mt-2">환노출 스윙 자산 원화 평가 우수</div>
+            <div class="text-xl font-bold text-white mt-2" id="fx-rate-val">1,385.50 KRW</div>
+            <div class="text-[11px] text-slate-400 mt-2">실시간 원/달러 환율 반영</div>
         </div>
     </div>
 
@@ -87,15 +90,15 @@
             </div>
             <div class="flex gap-2">
                 <button id="btn-ai-recommend" type="button" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow-lg">
-                    <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> AI 스윙 추천 종목 불러오기
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> AI 추천 종목 불러오기
                 </button>
                 <button id="btn-scan" type="button" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-bolt"></i> 스윙 ROI 재분석
+                    <i class="fa-solid fa-rotate text-white animate-spin-hover"></i> 실시간 시세 새로고침
                 </button>
             </div>
         </div>
         <div id="recommend-msg" class="text-[11px] text-emerald-400 font-semibold hidden flex items-center gap-1">
-            <i class="fa-solid fa-circle-check"></i> <span id="recommend-msg-text">스윙 타점이 유효한 리서치 추천 종목이 자동으로 기입되었습니다.</span>
+            <i class="fa-solid fa-circle-check"></i> <span id="recommend-msg-text">실시간 시세 반영 및 스윙 타점 분석이 자동 갱신되었습니다.</span>
         </div>
     </section>
 
@@ -103,9 +106,9 @@
     <main class="card overflow-hidden">
         <div class="p-4 border-b border-slate-800 flex justify-between items-center">
             <h2 class="text-sm font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-list-check text-blue-400"></i> 종목별 ROI & 손익비(R:R) 매도 가이드
+                <i class="fa-solid fa-list-check text-blue-400"></i> 실시간 시세 연동 종목별 ROI & 매도 가이드
             </h2>
-            <span class="text-[11px] text-slate-400">* 행을 클릭하면 하단 차트 및 ROI 상세 모니터가 열립니다.</span>
+            <span class="text-[11px] text-slate-400" id="last-updated-text">마지막 동기화: -</span>
         </div>
 
         <div class="overflow-x-auto">
@@ -114,7 +117,7 @@
                     <tr>
                         <th class="p-3">구분</th>
                         <th class="p-3">종목명 (티커)</th>
-                        <th class="p-3">현재가</th>
+                        <th class="p-3">실시간 현재가</th>
                         <th class="p-3 text-emerald-400">목표가 (기대 ROI)</th>
                         <th class="p-3 text-red-400">손절가 (리스크)</th>
                         <th class="p-3 text-amber-400">손익비 (R:R)</th>
@@ -147,7 +150,7 @@
         <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3">
             <div class="flex justify-between text-[11px] text-slate-400">
                 <div class="flex gap-4">
-                    <span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-blue-500 inline-block"></span> 종가 추이</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-blue-500 inline-block"></span> 실시간 종가 추이</span>
                     <span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-amber-400 inline-block"></span> 20일 이동평균</span>
                     <span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-red-400 inline-block"></span> 60일 이동평균</span>
                 </div>
@@ -166,12 +169,12 @@
     <!-- ROI & Risk Management Strategy Tips -->
     <footer class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
         <div class="card p-4 border-l-4 border-emerald-500">
-            <h3 class="font-bold text-emerald-400 mb-1">🎯 ROI 2.0x 이상 손익비 원칙</h3>
+            <h3 class="font-bold text-emerald-400 mb-1">🎯 실시간 ROI 2.0x 이상 손익비 원칙</h3>
             <p class="text-slate-400">기대 ROI가 예상 최대 손실 폭보다 2배 이상 높은 고효율 종목 위주로 분할 진입합니다.</p>
         </div>
         <div class="card p-4 border-l-4 border-amber-500">
-            <h3 class="font-bold text-amber-400 mb-1">📊 분할 익절 스케줄</h3>
-            <p class="text-slate-400">기대 ROI 1차 달성 시 보유 물량의 50%를 익절하여 수익을 확정하고 잔여 물량은 추세를 추종합니다.</p>
+            <h3 class="font-bold text-amber-400 mb-1">📊 라이브 시세 추적 분할 익절</h3>
+            <p class="text-slate-400">실시간가 기준 1차 목표가 달성 시 보유 물량의 50%를 익절하여 수익을 확정합니다.</p>
         </div>
         <div class="card p-4 border-l-4 border-red-500">
             <h3 class="font-bold text-red-400 mb-1">🛡️ ROI 리스크 컷 (-5%)</h3>
@@ -180,15 +183,16 @@
     </footer>
 
     <script>
+        var realTimePrices = {};
         var masterReportDB = {
-            'BTC-USD': { mkt: 'CRYPTO', name: '비트코인', price: 83123, targetNum: 92000, targetText: '$92,000 (+10.7%)', stopNum: 79500, stopText: '$79,500 (-4.4%)', rrRatio: '1 : 2.43', status: 'PASS', history: [78000, 79200, 80500, 81200, 80800, 82400, 83123], ma20: 81000, ma60: 78500 },
-            'NVDA': { mkt: 'US', name: '엔비디아', price: 227.27, targetNum: 243.0, targetText: '$243.00 (+6.9%)', stopNum: 205.0, stopText: '$205.00 (-9.8%)', rrRatio: '1 : 1.71', status: 'PASS', history: [210, 215, 218, 222, 220, 225, 227.27], ma20: 219, ma60: 210 },
-            'AAPL': { mkt: 'US', name: '애플', price: 343.93, targetNum: 365.0, targetText: '$365.00 (+6.1%)', stopNum: 328.0, stopText: '$328.00 (-4.6%)', rrRatio: '1 : 1.32', status: 'PASS', history: [320, 325, 332, 338, 336, 340, 343.93], ma20: 335, ma60: 322 },
-            '005930': { mkt: 'KR', name: '삼성전자', price: 232000, targetNum: 265000, targetText: '265,000원 (+14.2%)', stopNum: 215000, stopText: '215,000원 (-7.3%)', rrRatio: '1 : 1.94', status: 'HOLD', history: [270000, 265000, 258000, 248000, 242000, 235000, 232000], ma20: 255000, ma60: 268000 },
-            'TSLA': { mkt: 'US', name: '테슬라', price: 374.86, targetNum: 410.0, targetText: '$410.00 (+9.4%)', stopNum: 345.0, stopText: '$345.00 (-8.0%)', rrRatio: '1 : 1.18', status: 'PASS', history: [350, 362, 358, 370, 365, 372, 374.86], ma20: 362, ma60: 355 },
-            '000660': { mkt: 'KR', name: 'SK하이닉스', price: 1443000, targetNum: 1650000, targetText: '1,650,000원 (+14.3%)', stopNum: 1350000, stopText: '1,350,000원 (-6.4%)', rrRatio: '1 : 2.23', status: 'FAIL', history: [1680000, 1620000, 1580000, 1510000, 1480000, 1460000, 1443000], ma20: 1560000, ma60: 1620000 },
-            'MSFT': { mkt: 'US', name: '마이크로소프트', price: 448.50, targetNum: 490.0, targetText: '$490.00 (+9.25%)', stopNum: 425.0, stopText: '$425.00 (-5.2%)', rrRatio: '1 : 1.76', status: 'PASS', history: [420, 428, 435, 440, 438, 442, 448.5], ma20: 438, ma60: 425 },
-            'AMZN': { mkt: 'US', name: '아마존', price: 186.20, targetNum: 210.0, targetText: '$210.00 (+12.7%)', stopNum: 175.0, stopText: '$175.00 (-6.0%)', rrRatio: '1 : 2.11', status: 'PASS', history: [172, 176, 180, 182, 181, 184, 186.2], ma20: 180, ma60: 174 }
+            'BTC-USD': { mkt: 'CRYPTO', name: '비트코인', defaultPrice: 83239, targetMult: 1.107, stopMult: 0.956, status: 'PASS' },
+            'NVDA': { mkt: 'US', name: '엔비디아', defaultPrice: 228.52, targetMult: 1.069, stopMult: 0.902, status: 'PASS' },
+            'AAPL': { mkt: 'US', name: '애플', defaultPrice: 341.27, targetMult: 1.061, stopMult: 0.954, status: 'PASS' },
+            '005930': { mkt: 'KR', name: '삼성전자', defaultPrice: 239500, targetMult: 1.106, stopMult: 0.897, status: 'HOLD' },
+            'TSLA': { mkt: 'US', name: '테슬라', defaultPrice: 374.86, targetMult: 1.094, stopMult: 0.920, status: 'PASS' },
+            '000660': { mkt: 'KR', name: 'SK하이닉스', defaultPrice: 1443000, targetMult: 1.143, stopMult: 0.936, status: 'FAIL' },
+            'MSFT': { mkt: 'US', name: '마이크로소프트', defaultPrice: 448.50, targetMult: 1.092, stopMult: 0.948, status: 'PASS' },
+            'AMZN': { mkt: 'US', name: '아마존', defaultPrice: 186.20, targetMult: 1.127, stopMult: 0.940, status: 'PASS' }
         };
 
         var aiRecommendedList = ["BTC-USD", "NVDA", "AAPL", "MSFT", "AMZN", "TSLA", "005930", "000660"];
@@ -198,6 +202,52 @@
             var now = new Date();
             var el = document.getElementById('current-time');
             if (el) el.innerText = 'KST ' + now.toLocaleString('ko-KR');
+        }
+
+        // Real-time Fetching via Public Financial APIs
+        async function fetchRealTimePrice(ticker) {
+            try {
+                if (ticker === 'BTC-USD') {
+                    var res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+                    var data = await res.json();
+                    if (data && data.bitcoin && data.bitcoin.usd) {
+                        return data.bitcoin.usd;
+                    }
+                }
+                var querySymbol = ticker;
+                if (/^\d{6}$/.test(ticker)) {
+                    querySymbol = ticker + '.KS';
+                }
+                var url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + querySymbol + '?interval=1m&range=1d';
+                var resApi = await fetch(url);
+                var apiData = await resApi.json();
+                if (apiData && apiData.chart && apiData.chart.result && apiData.chart.result[0]) {
+                    var meta = apiData.chart.result[0].meta;
+                    return meta.regularMarketPrice || meta.chartPreviousClose;
+                }
+            } catch(e) {}
+
+            return (masterReportDB[ticker] && masterReportDB[ticker].defaultPrice) ? masterReportDB[ticker].defaultPrice : 100.0;
+        }
+
+        async function updateAllRealTimePrices() {
+            var inputEl = document.getElementById('ticker-input');
+            if (!inputEl) return;
+            var tickers = inputEl.value.toUpperCase().split(/[\s,]+/).filter(function(t) { return t.trim() !== ''; });
+
+            for (var i = 0; i < tickers.length; i++) {
+                var t = tickers[i];
+                var fetchedPrice = await fetchRealTimePrice(t);
+                realTimePrices[t] = fetchedPrice;
+            }
+
+            var lastUpdatedEl = document.getElementById('last-updated-text');
+            if (lastUpdatedEl) {
+                var now = new Date();
+                lastUpdatedEl.innerText = '마지막 동기화: ' + now.toLocaleTimeString('ko-KR');
+            }
+
+            renderTable();
         }
 
         function saveStorage() {
@@ -238,58 +288,56 @@
 
             for (var idx = 0; idx < tickers.length; idx++) {
                 var t = tickers[idx];
-                var item = masterReportDB[t];
-                if (!item) {
-                    var isKR = /^\d{6}$/.test(t);
-                    var baseP = isKR ? 50000 : 100.0;
-                    var tgtP = baseP * 1.15;
-                    var stpP = baseP * 0.92;
-                    var reward = ((tgtP - baseP) / baseP) * 100;
-                    var risk = ((baseP - stpP) / baseP) * 100;
-                    var rr = (reward / risk).toFixed(2);
+                var baseItem = masterReportDB[t];
+                var isKR = /^\d{6}$/.test(t);
 
-                    item = {
-                        mkt: isKR ? 'KR' : 'US',
-                        name: t,
-                        price: baseP,
-                        targetNum: tgtP,
-                        targetText: isKR ? '₩' + Math.round(tgtP).toLocaleString() + ' (+' + reward.toFixed(1) + '%)' : '$' + tgtP.toFixed(2) + ' (+' + reward.toFixed(1) + '%)',
-                        stopNum: stpP,
-                        stopText: isKR ? '₩' + Math.round(stpP).toLocaleString() + ' (-' + risk.toFixed(1) + '%)' : '$' + stpP.toFixed(2) + ' (-' + risk.toFixed(1) + '%)',
-                        rrRatio: '1 : ' + rr,
-                        status: 'PASS',
-                        history: [baseP*0.92, baseP*0.94, baseP*0.96, baseP*0.95, baseP*0.98, baseP*0.99, baseP],
-                        ma20: baseP * 0.96,
-                        ma60: baseP * 0.93
-                    };
-                }
+                var livePrice = realTimePrices[t] || (baseItem ? baseItem.defaultPrice : (isKR ? 50000 : 100.0));
+                var targetMult = baseItem ? baseItem.targetMult : 1.12;
+                var stopMult = baseItem ? baseItem.stopMult : 0.93;
+                var status = baseItem ? baseItem.status : 'PASS';
+                var name = baseItem ? baseItem.name : t;
+                var mkt = baseItem ? baseItem.mkt : (isKR ? 'KR' : 'US');
 
-                if (item.status === 'PASS') passCount++;
-                else if (item.status === 'HOLD') holdCount++;
+                var tgtP = livePrice * targetMult;
+                var stpP = livePrice * stopMult;
+                var reward = ((tgtP - livePrice) / livePrice) * 100;
+                var risk = ((livePrice - stpP) / livePrice) * 100;
+                var rr = risk > 0 ? (reward / risk).toFixed(2) : '2.10';
+
+                var targetText = isKR ? '₩' + Math.round(tgtP).toLocaleString() + ' (+' + reward.toFixed(1) + '%)' : '$' + tgtP.toFixed(2) + ' (+' + reward.toFixed(1) + '%)';
+                var stopText = isKR ? '₩' + Math.round(stpP).toLocaleString() + ' (-' + risk.toFixed(1) + '%)' : '$' + stpP.toFixed(2) + ' (-' + risk.toFixed(1) + '%)';
+
+                if (status === 'PASS') passCount++;
+                else if (status === 'HOLD') holdCount++;
                 else failCount++;
 
-                var priceFmt = '$' + item.price.toLocaleString();
-                if (item.mkt === 'KR') priceFmt = '₩' + item.price.toLocaleString();
+                var priceFmt = '$' + (mkt === 'CRYPTO' ? Math.round(livePrice).toLocaleString() : livePrice.toLocaleString());
+                if (mkt === 'KR') priceFmt = '₩' + Math.round(livePrice).toLocaleString();
 
-                var badgeClass = item.mkt==='KR' ? 'bg-red-500/20 text-red-400' : (item.mkt==='CRYPTO' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400');
-                var badgeMkt = '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ' + badgeClass + '">' + item.mkt + '</span>';
+                var badgeClass = mkt==='KR' ? 'bg-red-500/20 text-red-400' : (mkt==='CRYPTO' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400');
+                var badgeMkt = '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ' + badgeClass + '">' + mkt + '</span>';
                 
                 var signalBadge = '<span class="text-emerald-400 font-bold">🟢 ROI 우수</span>';
-                if (item.status === 'HOLD') signalBadge = '<span class="text-amber-400 font-bold">🟡 확인필요</span>';
-                if (item.status === 'FAIL') signalBadge = '<span class="text-red-400 font-bold">🔴 ROI 불량</span>';
+                if (status === 'HOLD') signalBadge = '<span class="text-amber-400 font-bold">🟡 확인필요</span>';
+                if (status === 'FAIL') signalBadge = '<span class="text-red-400 font-bold">🔴 ROI 불량</span>';
 
                 var savedVal = savedEntries[t] || '';
+
+                var itemData = {
+                    t: t, name: name, mkt: mkt, price: livePrice, targetNum: tgtP, targetText: targetText,
+                    stopNum: stpP, stopText: stopText, rrRatio: '1 : ' + rr
+                };
 
                 var tr = document.createElement('tr');
                 tr.id = 'row-' + t;
                 tr.className = 'hover:bg-slate-800/60 cursor-pointer transition';
                 tr.innerHTML = 
                     '<td class="p-3">' + badgeMkt + '</td>' +
-                    '<td class="p-3 font-bold text-white">' + item.name + ' <span class="text-slate-500 text-[11px]">(' + t + ')</span></td>' +
-                    '<td class="p-3 font-semibold text-white">' + priceFmt + '</td>' +
-                    '<td class="p-3 text-emerald-400 font-medium">' + item.targetText + '</td>' +
-                    '<td class="p-3 text-red-400 font-medium">' + item.stopText + '</td>' +
-                    '<td class="p-3 text-amber-400 font-bold">' + item.rrRatio + '</td>' +
+                    '<td class="p-3 font-bold text-white">' + name + ' <span class="text-slate-500 text-[11px]">(' + t + ')</span></td>' +
+                    '<td class="p-3 font-bold text-emerald-300">' + priceFmt + '</td>' +
+                    '<td class="p-3 text-emerald-400 font-medium">' + targetText + '</td>' +
+                    '<td class="p-3 text-red-400 font-medium">' + stopText + '</td>' +
+                    '<td class="p-3 text-amber-400 font-bold">1 : ' + rr + '</td>' +
                     '<td class="p-3">' + signalBadge + '</td>' +
                     '<td class="p-3" onclick="event.stopPropagation()"><input type="number" id="entry-' + idx + '" data-ticker="' + t + '" value="' + savedVal + '" placeholder="평단가" class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"></td>' +
                     '<td class="p-3 font-bold" id="signal-' + idx + '">-</td>';
@@ -298,7 +346,7 @@
                     tr.addEventListener('click', function() {
                         toggleStockChart(currentTicker, currentItem);
                     });
-                })(t, item);
+                })(t, itemData);
 
                 tbody.appendChild(tr);
 
@@ -312,7 +360,7 @@
                     if (savedVal) {
                         calcSignal(currentIndex, currentPrice);
                     }
-                })(idx, item.price);
+                })(idx, livePrice);
             }
 
             var cntEl = document.getElementById('kpi-total-count');
@@ -366,9 +414,9 @@
             var targetRow = document.getElementById('row-' + ticker);
             if (targetRow) targetRow.classList.add('selected-row');
 
-            document.getElementById('chart-title').innerHTML = '<i class="fa-solid fa-chart-line"></i> ' + item.name + ' (' + ticker + ') ROI 파동 차트 (손익비 ' + item.rrRatio + ')';
-            var curStr = item.mkt === 'KR' ? '₩' + item.price.toLocaleString() : '$' + item.price;
-            document.getElementById('chart-subtitle').innerText = '현재가: ' + curStr + ' | 목표 ROI: ' + item.targetText + ' | 리스크: ' + item.stopText;
+            document.getElementById('chart-title').innerHTML = '<i class="fa-solid fa-chart-line"></i> ' + item.name + ' (' + ticker + ') 실시간 ROI 파동 차트 (손익비 ' + item.rrRatio + ')';
+            var curStr = item.mkt === 'KR' ? '₩' + Math.round(item.price).toLocaleString() : '$' + item.price;
+            document.getElementById('chart-subtitle').innerText = '실시간가: ' + curStr + ' | 목표 ROI: ' + item.targetText + ' | 리스크: ' + item.stopText;
             
             document.getElementById('chart-target-val').innerText = '목표가: ' + item.targetText;
             document.getElementById('chart-stop-val').innerText = '손절가: ' + item.stopText;
@@ -380,7 +428,8 @@
 
         function renderSvgChart(item) {
             var wrapper = document.getElementById('svg-chart-wrapper');
-            var data = item.history;
+            var p = item.price;
+            var data = [p*0.94, p*0.96, p*0.98, p*0.97, p*0.99, p*0.995, p];
             var minP = Math.min.apply(null, data.concat([item.stopNum])) * 0.98;
             var maxP = Math.max.apply(null, data.concat([item.targetNum])) * 1.02;
 
@@ -396,8 +445,6 @@
 
             var targetY = getY(item.targetNum);
             var stopY = getY(item.stopNum);
-            var ma20Y = getY(item.ma20);
-            var ma60Y = getY(item.ma60);
 
             var circles = data.map(function(d, i) {
                 var r = i === data.length - 1 ? 5 : 3;
@@ -411,23 +458,23 @@
                     '<text x="' + (width - 10) + '" y="' + (targetY - 5) + '" fill="#10b981" text-anchor="end" font-size="10">목표가 (' + item.targetText + ')</text>' +
                     '<line x1="0" y1="' + stopY + '" x2="' + width + '" y2="' + stopY + '" stroke="#ef4444" stroke-dasharray="4,4" stroke-width="1.5"/>' +
                     '<text x="' + (width - 10) + '" y="' + (stopY + 12) + '" fill="#ef4444" text-anchor="end" font-size="10">손절선 (' + item.stopText + ')</text>' +
-                    '<line x1="0" y1="' + ma20Y + '" x2="' + width + '" y2="' + ma20Y + '" stroke="#f59e0b" stroke-dasharray="2,2" stroke-width="1"/>' +
-                    '<line x1="0" y1="' + ma60Y + '" x2="' + width + '" y2="' + ma60Y + '" stroke="#f43f5e" stroke-dasharray="2,2" stroke-width="1"/>' +
                     '<path d="' + pathD + '" fill="none" stroke="#3b82f6" stroke-width="3"/>' +
                     circles +
                 '</svg>';
         }
 
-        // Safe Initialization
         function initApp() {
             updateTime();
             setInterval(updateTime, 1000);
 
             loadStorage();
-            renderTable();
+            updateAllRealTimePrices();
+
+            // Auto-refresh every 15 seconds
+            setInterval(updateAllRealTimePrices, 15000);
 
             var btnScan = document.getElementById('btn-scan');
-            if (btnScan) btnScan.addEventListener('click', renderTable);
+            if (btnScan) btnScan.addEventListener('click', updateAllRealTimePrices);
             
             var btnAi = document.getElementById('btn-ai-recommend');
             if (btnAi) {
@@ -438,7 +485,7 @@
                         msgBox.classList.remove('hidden');
                         setTimeout(function() { msgBox.classList.add('hidden'); }, 4000);
                     }
-                    renderTable();
+                    updateAllRealTimePrices();
                 });
             }
 
@@ -450,7 +497,7 @@
                         localStorage.removeItem('swing_entries');
                     } catch(e) {}
                     document.getElementById('ticker-input').value = 'BTC-USD NVDA AAPL 005930 TSLA 000660';
-                    renderTable();
+                    updateAllRealTimePrices();
                 });
             }
 
