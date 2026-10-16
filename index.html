@@ -23,7 +23,7 @@
                     <i class="fa-solid fa-bolt-lightning text-amber-400"></i> 월스트리트 실시간 스윙 & ROI 터미널
                 </h1>
             </div>
-            <p class="text-xs text-slate-400 mt-1">실시간 시세 연동 · 자동 ROI 재계산 · 15초 주기 라이브 자동 갱신</p>
+            <p class="text-xs text-slate-400 mt-1">실시간 시세 및 전일대비 등락률 연동 · 라이브 자동 갱신</p>
         </div>
         <div class="flex items-center gap-3">
             <span class="text-xs text-emerald-400 font-semibold flex items-center gap-1.5" id="live-indicator">
@@ -86,14 +86,14 @@
         <div class="flex flex-col md:flex-row gap-2 items-stretch md:items-center justify-between">
             <div class="flex-1 flex gap-2 items-center bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5">
                 <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
-                <input type="text" id="ticker-input" value="BTC-USD NVDA AAPL 005930 TSLA 000660" placeholder="분석할 종목/티커 입력 (예: BTC-USD NVDA AAPL 005930)" class="w-full bg-transparent text-xs text-white focus:outline-none">
+                <input type="text" id="ticker-input" value="NVDA AAPL TSLA MSFT AMZN 005930 000660" placeholder="분석할 종목/티커 입력 (예: NVDA AAPL 005930)" class="w-full bg-transparent text-xs text-white focus:outline-none">
             </div>
             <div class="flex gap-2">
                 <button id="btn-ai-recommend" type="button" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow-lg">
                     <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> AI 추천 종목 불러오기
                 </button>
                 <button id="btn-scan" type="button" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-rotate text-white animate-spin-hover"></i> 실시간 시세 새로고침
+                    <i class="fa-solid fa-rotate text-white"></i> 실시간 시세 새로고침
                 </button>
             </div>
         </div>
@@ -118,6 +118,7 @@
                         <th class="p-3">구분</th>
                         <th class="p-3">종목명 (티커)</th>
                         <th class="p-3">실시간 현재가</th>
+                        <th class="p-3">전일대비 (등락)</th>
                         <th class="p-3 text-emerald-400">목표가 (기대 ROI)</th>
                         <th class="p-3 text-red-400">손절가 (리스크)</th>
                         <th class="p-3 text-amber-400">손익비 (R:R)</th>
@@ -183,19 +184,18 @@
     </footer>
 
     <script>
-        var realTimePrices = {};
+        var realTimeData = {};
         var masterReportDB = {
-            'BTC-USD': { mkt: 'CRYPTO', name: '비트코인', defaultPrice: 83239, targetMult: 1.107, stopMult: 0.956, status: 'PASS' },
-            'NVDA': { mkt: 'US', name: '엔비디아', defaultPrice: 228.52, targetMult: 1.069, stopMult: 0.902, status: 'PASS' },
-            'AAPL': { mkt: 'US', name: '애플', defaultPrice: 341.27, targetMult: 1.061, stopMult: 0.954, status: 'PASS' },
-            '005930': { mkt: 'KR', name: '삼성전자', defaultPrice: 239500, targetMult: 1.106, stopMult: 0.897, status: 'HOLD' },
-            'TSLA': { mkt: 'US', name: '테슬라', defaultPrice: 374.86, targetMult: 1.094, stopMult: 0.920, status: 'PASS' },
-            '000660': { mkt: 'KR', name: 'SK하이닉스', defaultPrice: 1443000, targetMult: 1.143, stopMult: 0.936, status: 'FAIL' },
-            'MSFT': { mkt: 'US', name: '마이크로소프트', defaultPrice: 448.50, targetMult: 1.092, stopMult: 0.948, status: 'PASS' },
-            'AMZN': { mkt: 'US', name: '아마존', defaultPrice: 186.20, targetMult: 1.127, stopMult: 0.940, status: 'PASS' }
+            'NVDA': { mkt: 'US', name: '엔비디아', defaultPrice: 180.52, prevClose: 178.20, targetMult: 1.08, stopMult: 0.92, status: 'PASS' },
+            'AAPL': { mkt: 'US', name: '애플', defaultPrice: 242.50, prevClose: 240.10, targetMult: 1.06, stopMult: 0.95, status: 'PASS' },
+            'TSLA': { mkt: 'US', name: '테슬라', defaultPrice: 218.80, prevClose: 221.30, targetMult: 1.10, stopMult: 0.91, status: 'PASS' },
+            'MSFT': { mkt: 'US', name: '마이크로소프트', defaultPrice: 448.50, prevClose: 445.00, targetMult: 1.08, stopMult: 0.94, status: 'PASS' },
+            'AMZN': { mkt: 'US', name: '아마존', defaultPrice: 186.20, prevClose: 184.50, targetMult: 1.11, stopMult: 0.93, status: 'PASS' },
+            '005930': { mkt: 'KR', name: '삼성전자', defaultPrice: 59500, prevClose: 58800, targetMult: 1.12, stopMult: 0.92, status: 'HOLD' },
+            '000660': { mkt: 'KR', name: 'SK하이닉스', defaultPrice: 186000, prevClose: 189000, targetMult: 1.14, stopMult: 0.93, status: 'FAIL' }
         };
 
-        var aiRecommendedList = ["BTC-USD", "NVDA", "AAPL", "MSFT", "AMZN", "TSLA", "005930", "000660"];
+        var aiRecommendedList = ["NVDA", "AAPL", "TSLA", "MSFT", "AMZN", "005930", "000660"];
         var selectedTicker = null;
 
         function updateTime() {
@@ -204,30 +204,31 @@
             if (el) el.innerText = 'KST ' + now.toLocaleString('ko-KR');
         }
 
-        // Real-time Fetching via Public Financial APIs
-        async function fetchRealTimePrice(ticker) {
+        // Fetching Real-time Quote with CORS Proxy
+        async function fetchRealTimeQuote(ticker) {
             try {
-                if (ticker === 'BTC-USD') {
-                    var res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
-                    var data = await res.json();
-                    if (data && data.bitcoin && data.bitcoin.usd) {
-                        return data.bitcoin.usd;
-                    }
-                }
-                var querySymbol = ticker;
-                if (/^\d{6}$/.test(ticker)) {
-                    querySymbol = ticker + '.KS';
-                }
-                var url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + querySymbol + '?interval=1m&range=1d';
-                var resApi = await fetch(url);
-                var apiData = await resApi.json();
-                if (apiData && apiData.chart && apiData.chart.result && apiData.chart.result[0]) {
-                    var meta = apiData.chart.result[0].meta;
-                    return meta.regularMarketPrice || meta.chartPreviousClose;
+                var symbol = ticker;
+                if (/^\d{6}$/.test(ticker)) symbol = ticker + '.KS';
+
+                var targetUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + symbol + '?interval=1d&range=5d';
+                var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+
+                var res = await fetch(proxyUrl);
+                var data = await res.json();
+
+                if (data && data.chart && data.chart.result && data.chart.result[0]) {
+                    var meta = data.chart.result[0].meta;
+                    var curPrice = meta.regularMarketPrice || meta.chartPreviousClose;
+                    var prevClose = meta.chartPreviousClose || meta.previousClose || curPrice;
+                    return { price: curPrice, prevClose: prevClose };
                 }
             } catch(e) {}
 
-            return (masterReportDB[ticker] && masterReportDB[ticker].defaultPrice) ? masterReportDB[ticker].defaultPrice : 100.0;
+            var base = masterReportDB[ticker];
+            if (base) {
+                return { price: base.defaultPrice, prevClose: base.prevClose };
+            }
+            return { price: 100.0, prevClose: 100.0 };
         }
 
         async function updateAllRealTimePrices() {
@@ -237,8 +238,8 @@
 
             for (var i = 0; i < tickers.length; i++) {
                 var t = tickers[i];
-                var fetchedPrice = await fetchRealTimePrice(t);
-                realTimePrices[t] = fetchedPrice;
+                var quote = await fetchRealTimeQuote(t);
+                realTimeData[t] = quote;
             }
 
             var lastUpdatedEl = document.getElementById('last-updated-text');
@@ -291,8 +292,28 @@
                 var baseItem = masterReportDB[t];
                 var isKR = /^\d{6}$/.test(t);
 
-                var livePrice = realTimePrices[t] || (baseItem ? baseItem.defaultPrice : (isKR ? 50000 : 100.0));
-                var targetMult = baseItem ? baseItem.targetMult : 1.12;
+                var quote = realTimeData[t] || {
+                    price: baseItem ? baseItem.defaultPrice : (isKR ? 50000 : 100.0),
+                    prevClose: baseItem ? baseItem.prevClose : (isKR ? 50000 : 100.0)
+                };
+
+                var livePrice = quote.price;
+                var prevClose = quote.prevClose;
+
+                // Day change calculation
+                var changeVal = livePrice - prevClose;
+                var changePct = prevClose > 0 ? (changeVal / prevClose) * 100 : 0;
+
+                var changeHtml = '';
+                if (changeVal > 0) {
+                    changeHtml = '<span class="text-red-400 font-bold">▲ ' + (isKR ? '₩' + Math.round(changeVal).toLocaleString() : '$' + changeVal.toFixed(2)) + ' (+' + changePct.toFixed(2) + '%)</span>';
+                } else if (changeVal < 0) {
+                    changeHtml = '<span class="text-blue-400 font-bold">▼ ' + (isKR ? '₩' + Math.abs(Math.round(changeVal)).toLocaleString() : '$' + Math.abs(changeVal).toFixed(2)) + ' (' + changePct.toFixed(2) + '%)</span>';
+                } else {
+                    changeHtml = '<span class="text-slate-400 font-bold">0.00 (0.00%)</span>';
+                }
+
+                var targetMult = baseItem ? baseItem.targetMult : 1.10;
                 var stopMult = baseItem ? baseItem.stopMult : 0.93;
                 var status = baseItem ? baseItem.status : 'PASS';
                 var name = baseItem ? baseItem.name : t;
@@ -311,10 +332,10 @@
                 else if (status === 'HOLD') holdCount++;
                 else failCount++;
 
-                var priceFmt = '$' + (mkt === 'CRYPTO' ? Math.round(livePrice).toLocaleString() : livePrice.toLocaleString());
+                var priceFmt = '$' + livePrice.toLocaleString();
                 if (mkt === 'KR') priceFmt = '₩' + Math.round(livePrice).toLocaleString();
 
-                var badgeClass = mkt==='KR' ? 'bg-red-500/20 text-red-400' : (mkt==='CRYPTO' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400');
+                var badgeClass = mkt==='KR' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400';
                 var badgeMkt = '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ' + badgeClass + '">' + mkt + '</span>';
                 
                 var signalBadge = '<span class="text-emerald-400 font-bold">🟢 ROI 우수</span>';
@@ -334,7 +355,8 @@
                 tr.innerHTML = 
                     '<td class="p-3">' + badgeMkt + '</td>' +
                     '<td class="p-3 font-bold text-white">' + name + ' <span class="text-slate-500 text-[11px]">(' + t + ')</span></td>' +
-                    '<td class="p-3 font-bold text-emerald-300">' + priceFmt + '</td>' +
+                    '<td class="p-3 font-bold text-white">' + priceFmt + '</td>' +
+                    '<td class="p-3">' + changeHtml + '</td>' +
                     '<td class="p-3 text-emerald-400 font-medium">' + targetText + '</td>' +
                     '<td class="p-3 text-red-400 font-medium">' + stopText + '</td>' +
                     '<td class="p-3 text-amber-400 font-bold">1 : ' + rr + '</td>' +
@@ -470,8 +492,8 @@
             loadStorage();
             updateAllRealTimePrices();
 
-            // Auto-refresh every 15 seconds
-            setInterval(updateAllRealTimePrices, 15000);
+            // Auto-refresh every 20 seconds
+            setInterval(updateAllRealTimePrices, 20000);
 
             var btnScan = document.getElementById('btn-scan');
             if (btnScan) btnScan.addEventListener('click', updateAllRealTimePrices);
@@ -496,7 +518,7 @@
                         localStorage.removeItem('swing_tickers');
                         localStorage.removeItem('swing_entries');
                     } catch(e) {}
-                    document.getElementById('ticker-input').value = 'BTC-USD NVDA AAPL 005930 TSLA 000660';
+                    document.getElementById('ticker-input').value = 'NVDA AAPL TSLA MSFT AMZN 005930 000660';
                     updateAllRealTimePrices();
                 });
             }
