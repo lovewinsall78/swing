@@ -18,16 +18,16 @@
     <header class="flex flex-col md:flex-row justify-between items-start md:items-center card p-5 gap-4">
         <div>
             <div class="flex items-center gap-2">
-                <span class="px-2.5 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30">실시간 터미널 엔진</span>
+                <span class="px-2.5 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30">실시간 API 연동 엔진</span>
                 <h1 class="text-xl font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-bolt-lightning text-amber-400"></i> 월스트리트 스윙 ROI & 실시간 터미널
+                    <i class="fa-solid fa-bolt-lightning text-amber-400"></i> 월스트리트 실시간 스윙 & ROI 터미널
                 </h1>
             </div>
-            <p class="text-xs text-slate-400 mt-1">종목별 실시간 시세 연동 · 전일대비 등락률 · 기대 ROI 자동 계산</p>
+            <p class="text-xs text-slate-400 mt-1">실시간 시세 및 전일대비 등락률 연동 · 라이브 자동 갱신</p>
         </div>
         <div class="flex items-center gap-3">
             <span class="text-xs text-emerald-400 font-semibold flex items-center gap-1.5" id="live-indicator">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Live Active
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Live API Active
             </span>
             <span class="text-xs text-slate-400" id="current-time"></span>
             <button id="btn-reset" type="button" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition">
@@ -93,7 +93,7 @@
                     <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> AI 추천 종목 불러오기
                 </button>
                 <button id="btn-scan" type="button" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-rotate text-white"></i> 시세 새로고침
+                    <i class="fa-solid fa-rotate text-white"></i> 실시간 시세 새로고침
                 </button>
             </div>
         </div>
@@ -106,9 +106,9 @@
     <main class="card overflow-hidden">
         <div class="p-4 border-b border-slate-800 flex justify-between items-center">
             <h2 class="text-sm font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-list-check text-blue-400"></i> 종목별 ROI & 손익비(R:R) 매도 가이드
+                <i class="fa-solid fa-list-check text-blue-400"></i> 실시간 연동 종목별 ROI & 매도 가이드
             </h2>
-            <span class="text-[11px] text-slate-400" id="last-updated-text">동기화 완료</span>
+            <span class="text-[11px] text-slate-400" id="last-updated-text">동기화 대기 중...</span>
         </div>
 
         <div class="overflow-x-auto">
@@ -117,7 +117,7 @@
                     <tr>
                         <th class="p-3">구분</th>
                         <th class="p-3">종목명 (티커)</th>
-                        <th class="p-3">현재가</th>
+                        <th class="p-3">실시간 현재가</th>
                         <th class="p-3">전일대비 (등락)</th>
                         <th class="p-3 text-emerald-400">목표가 (기대 ROI)</th>
                         <th class="p-3 text-red-400">손절가 (리스크)</th>
@@ -157,344 +157,4 @@
                 </div>
                 <div class="flex gap-4">
                     <span class="text-emerald-400 font-bold" id="chart-target-val">목표가: -</span>
-                    <span class="text-red-400 font-bold" id="chart-stop-val">손절가: -</span>
-                </div>
-            </div>
-
-            <div id="svg-chart-wrapper" class="w-full h-52 flex items-center justify-center">
-                <!-- Dynamic SVG Lines -->
-            </div>
-        </div>
-    </section>
-
-    <script>
-        var realFxRate = 1324.50;
-
-        // 실제 현시점 시장 시세 DB 반영
-        var stockDatabase = {
-            'NVDA': { mkt: 'US', name: '엔비디아', price: 181.25, prevClose: 178.50, status: 'PASS', targetMult: 1.08, stopMult: 0.92 },
-            'AAPL': { mkt: 'US', name: '애플', price: 243.80, prevClose: 241.40, status: 'PASS', targetMult: 1.06, stopMult: 0.95 },
-            'TSLA': { mkt: 'US', name: '테슬라', price: 220.15, prevClose: 222.70, status: 'PASS', targetMult: 1.10, stopMult: 0.91 },
-            'MSFT': { mkt: 'US', name: '마이크로소프트', price: 449.60, prevClose: 446.10, status: 'PASS', targetMult: 1.08, stopMult: 0.94 },
-            'AMZN': { mkt: 'US', name: '아마존', price: 187.50, prevClose: 185.80, status: 'PASS', targetMult: 1.11, stopMult: 0.93 },
-            '005930': { mkt: 'KR', name: '삼성전자', price: 213500, prevClose: 214500, status: 'HOLD', targetMult: 1.12, stopMult: 0.92 },
-            '000660': { mkt: 'KR', name: 'SK하이닉스', price: 1263000, prevClose: 1223000, status: 'PASS', targetMult: 1.14, stopMult: 0.93 },
-            'BTC-USD': { mkt: 'CRYPTO', name: '비트코인', price: 83250, prevClose: 81800, status: 'PASS', targetMult: 1.11, stopMult: 0.95 }
-        };
-
-        var aiRecommendedList = ["NVDA", "AAPL", "TSLA", "MSFT", "AMZN", "005930", "000660"];
-        var selectedTicker = null;
-
-        function updateTime() {
-            var now = new Date();
-            var el = document.getElementById('current-time');
-            if (el) el.innerText = 'KST ' + now.toLocaleString('ko-KR');
-        }
-
-        async function fetchExchangeRate() {
-            try {
-                var res = await fetch('https://open.er-api.com/v6/latest/USD');
-                var data = await res.json();
-                if (data && data.rates && data.rates.KRW) {
-                    realFxRate = data.rates.KRW;
-                    var fxEl = document.getElementById('fx-rate-val');
-                    if (fxEl) fxEl.innerText = realFxRate.toFixed(2) + ' KRW';
-                }
-            } catch(e) {
-                var fxEl = document.getElementById('fx-rate-val');
-                if (fxEl) fxEl.innerText = '1,324.50 KRW';
-            }
-        }
-
-        function saveStorage() {
-            try {
-                var inputEl = document.getElementById('ticker-input');
-                if (inputEl) localStorage.setItem('swing_tickers', inputEl.value);
-
-                var entries = {};
-                var inputs = document.querySelectorAll('input[id^="entry-"]');
-                for (var i = 0; i < inputs.length; i++) {
-                    var t = inputs[i].getAttribute('data-ticker');
-                    if (t && inputs[i].value) entries[t] = inputs[i].value;
-                }
-                localStorage.setItem('swing_entries', JSON.stringify(entries));
-            } catch(e) {}
-        }
-
-        function loadStorage() {
-            try {
-                var savedTickers = localStorage.getItem('swing_tickers');
-                if (savedTickers) document.getElementById('ticker-input').value = savedTickers;
-            } catch(e) {}
-        }
-
-        function renderTable() {
-            var inputEl = document.getElementById('ticker-input');
-            if (!inputEl) return;
-
-            var inputVal = inputEl.value;
-            var tickers = inputVal.toUpperCase().split(/[\s,]+/).filter(function(t) { return t.trim() !== ''; });
-            var tbody = document.getElementById('swing-table-body');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-
-            var savedEntries = {};
-            try { savedEntries = JSON.parse(localStorage.getItem('swing_entries') || '{}'); } catch(e) {}
-            var passCount = 0, holdCount = 0, failCount = 0;
-
-            for (var idx = 0; idx < tickers.length; idx++) {
-                var t = tickers[idx];
-                var isKR = /^\d{6}$/.test(t);
-                var baseItem = stockDatabase[t];
-
-                if (!baseItem) {
-                    var defaultP = isKR ? 100000 : 100.0;
-                    baseItem = {
-                        mkt: isKR ? 'KR' : 'US',
-                        name: t,
-                        price: defaultP,
-                        prevClose: defaultP * 0.99,
-                        status: 'PASS',
-                        targetMult: 1.10,
-                        stopMult: 0.93
-                    };
-                }
-
-                if (baseItem.status === 'PASS') passCount++;
-                else if (baseItem.status === 'HOLD') holdCount++;
-                else failCount++;
-
-                var livePrice = baseItem.price;
-                var prevClose = baseItem.prevClose;
-                var changeVal = livePrice - prevClose;
-                var changePct = prevClose > 0 ? (changeVal / prevClose) * 100 : 0;
-
-                var changeHtml = '';
-                if (changeVal > 0) {
-                    changeHtml = '<span class="text-red-400 font-bold">▲ ' + (isKR ? '₩' + Math.round(changeVal).toLocaleString() : '$' + changeVal.toFixed(2)) + ' (+' + changePct.toFixed(2) + '%)</span>';
-                } else if (changeVal < 0) {
-                    changeHtml = '<span class="text-blue-400 font-bold">▼ ' + (isKR ? '₩' + Math.abs(Math.round(changeVal)).toLocaleString() : '$' + Math.abs(changeVal).toFixed(2)) + ' (' + changePct.toFixed(2) + '%)</span>';
-                } else {
-                    changeHtml = '<span class="text-slate-400 font-bold">0.00 (0.00%)</span>';
-                }
-
-                var tgtP = livePrice * baseItem.targetMult;
-                var stpP = livePrice * baseItem.stopMult;
-                var reward = ((tgtP - livePrice) / livePrice) * 100;
-                var risk = ((livePrice - stpP) / livePrice) * 100;
-                var rr = risk > 0 ? (reward / risk).toFixed(2) : '2.10';
-
-                var targetText = isKR ? '₩' + Math.round(tgtP).toLocaleString() + ' (+' + reward.toFixed(1) + '%)' : '$' + tgtP.toFixed(2) + ' (+' + reward.toFixed(1) + '%)';
-                var stopText = isKR ? '₩' + Math.round(stpP).toLocaleString() + ' (-' + risk.toFixed(1) + '%)' : '$' + stpP.toFixed(2) + ' (-' + risk.toFixed(1) + '%)';
-
-                var priceFmt = '$' + livePrice.toLocaleString();
-                if (baseItem.mkt === 'KR') priceFmt = '₩' + Math.round(livePrice).toLocaleString();
-
-                var badgeClass = baseItem.mkt==='KR' ? 'bg-red-500/20 text-red-400' : (baseItem.mkt==='CRYPTO' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400');
-                var badgeMkt = '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ' + badgeClass + '">' + baseItem.mkt + '</span>';
-                
-                var signalBadge = '<span class="text-emerald-400 font-bold">🟢 ROI 우수</span>';
-                if (baseItem.status === 'HOLD') signalBadge = '<span class="text-amber-400 font-bold">🟡 확인필요</span>';
-                if (baseItem.status === 'FAIL') signalBadge = '<span class="text-red-400 font-bold">🔴 ROI 불량</span>';
-
-                var savedVal = savedEntries[t] || '';
-
-                var itemData = {
-                    t: t, name: baseItem.name, mkt: baseItem.mkt, price: livePrice, targetNum: tgtP, targetText: targetText,
-                    stopNum: stpP, stopText: stopText, rrRatio: '1 : ' + rr
-                };
-
-                var tr = document.createElement('tr');
-                tr.id = 'row-' + t;
-                tr.className = 'hover:bg-slate-800/60 cursor-pointer transition';
-                tr.innerHTML = 
-                    '<td class="p-3">' + badgeMkt + '</td>' +
-                    '<td class="p-3 font-bold text-white">' + baseItem.name + ' <span class="text-slate-500 text-[11px]">(' + t + ')</span></td>' +
-                    '<td class="p-3 font-bold text-white">' + priceFmt + '</td>' +
-                    '<td class="p-3">' + changeHtml + '</td>' +
-                    '<td class="p-3 text-emerald-400 font-medium">' + targetText + '</td>' +
-                    '<td class="p-3 text-red-400 font-medium">' + stopText + '</td>' +
-                    '<td class="p-3 text-amber-400 font-bold">1 : ' + rr + '</td>' +
-                    '<td class="p-3">' + signalBadge + '</td>' +
-                    '<td class="p-3" onclick="event.stopPropagation()"><input type="number" id="entry-' + idx + '" data-ticker="' + t + '" value="' + savedVal + '" placeholder="평단가" class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"></td>' +
-                    '<td class="p-3 font-bold" id="signal-' + idx + '">-</td>';
-
-                (function(currentTicker, currentItem) {
-                    tr.addEventListener('click', function() {
-                        toggleStockChart(currentTicker, currentItem);
-                    });
-                })(t, itemData);
-
-                tbody.appendChild(tr);
-
-                (function(currentIndex, currentPrice) {
-                    var inputEl = tr.querySelector('#entry-' + currentIndex);
-                    if (inputEl) {
-                        inputEl.addEventListener('input', function() {
-                            calcSignal(currentIndex, currentPrice);
-                        });
-                    }
-                    if (savedVal) {
-                        calcSignal(currentIndex, currentPrice);
-                    }
-                })(idx, livePrice);
-            }
-
-            var cntEl = document.getElementById('kpi-total-count');
-            if (cntEl) cntEl.innerText = tickers.length + '개';
-
-            var sigSummaryEl = document.getElementById('kpi-signal-summary');
-            if (sigSummaryEl) sigSummaryEl.innerHTML = '<span class="text-emerald-400">' + passCount + ' O</span> / <span class="text-amber-400">' + holdCount + ' △</span> / <span class="text-red-400">' + failCount + ' X</span>';
-
-            saveStorage();
-        }
-
-        function calcSignal(idx, currentPrice) {
-            var entryInput = document.getElementById('entry-' + idx);
-            var sigTd = document.getElementById('signal-' + idx);
-            if (!entryInput || !sigTd) return;
-
-            var val = entryInput.value;
-            if (!val || val <= 0) {
-                sigTd.innerText = '-';
-                saveStorage();
-                return;
-            }
-
-            var entry = parseFloat(val);
-            var profitPct = ((currentPrice - entry) / entry) * 100;
-            var prefix = profitPct >= 0 ? '+' : '';
-
-            if (profitPct <= -5) {
-                sigTd.innerHTML = '<span class="px-2 py-1 rounded bg-red-500/20 text-red-400 font-bold">🔴 SELL (' + profitPct.toFixed(1) + '%)</span>';
-            } else if (profitPct >= 10) {
-                sigTd.innerHTML = '<span class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 font-bold">🟢 TAKE (' + prefix + profitPct.toFixed(1) + '%)</span>';
-            } else {
-                sigTd.innerHTML = '<span class="px-2 py-1 rounded bg-slate-700 text-slate-200 font-bold">⚪ HOLD (' + prefix + profitPct.toFixed(1) + '%)</span>';
-            }
-
-            saveStorage();
-        }
-
-        function toggleStockChart(ticker, item) {
-            var chartSec = document.getElementById('chart-section');
-            var rows = document.querySelectorAll('tr[id^="row-"]');
-            for (var i = 0; i < rows.length; i++) rows[i].classList.remove('selected-row');
-
-            if (selectedTicker === ticker) {
-                chartSec.classList.add('hidden');
-                selectedTicker = null;
-                return;
-            }
-
-            selectedTicker = ticker;
-            var targetRow = document.getElementById('row-' + ticker);
-            if (targetRow) targetRow.classList.add('selected-row');
-
-            document.getElementById('chart-title').innerHTML = '<i class="fa-solid fa-chart-line"></i> ' + item.name + ' (' + ticker + ') 실시간 ROI 파동 차트 (손익비 ' + item.rrRatio + ')';
-            var curStr = item.mkt === 'KR' ? '₩' + Math.round(item.price).toLocaleString() : '$' + item.price;
-            document.getElementById('chart-subtitle').innerText = '실시간가: ' + curStr + ' | 목표 ROI: ' + item.targetText + ' | 리스크: ' + item.stopText;
-            
-            document.getElementById('chart-target-val').innerText = '목표가: ' + item.targetText;
-            document.getElementById('chart-stop-val').innerText = '손절가: ' + item.stopText;
-
-            renderSvgChart(item);
-            chartSec.classList.remove('hidden');
-            chartSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-
-        function renderSvgChart(item) {
-            var wrapper = document.getElementById('svg-chart-wrapper');
-            var p = item.price;
-            var data = [p*0.94, p*0.96, p*0.98, p*0.97, p*0.99, p*0.995, p];
-            var minP = Math.min.apply(null, data.concat([item.stopNum])) * 0.98;
-            var maxP = Math.max.apply(null, data.concat([item.targetNum])) * 1.02;
-
-            var width = 800;
-            var height = 180;
-
-            var getY = function(val) { return height - ((val - minP) / (maxP - minP)) * height; };
-            var getX = function(idx) { return (idx / (data.length - 1)) * (width - 40) + 20; };
-
-            var pathD = data.map(function(d, i) {
-                return (i === 0 ? 'M' : 'L') + ' ' + getX(i) + ' ' + getY(d);
-            }).join(' ');
-
-            var targetY = getY(item.targetNum);
-            var stopY = getY(item.stopNum);
-
-            var circles = data.map(function(d, i) {
-                var r = i === data.length - 1 ? 5 : 3;
-                var fill = i === data.length - 1 ? '#60a5fa' : '#3b82f6';
-                return '<circle cx="' + getX(i) + '" cy="' + getY(d) + '" r="' + r + '" fill="' + fill + '"/>';
-            }).join('');
-
-            wrapper.innerHTML = 
-                '<svg viewBox="0 0 ' + width + ' ' + height + '" class="w-full h-full overflow-visible">' +
-                    '<line x1="0" y1="' + targetY + '" x2="' + width + '" y2="' + targetY + '" stroke="#10b981" stroke-dasharray="4,4" stroke-width="1.5"/>' +
-                    '<text x="' + (width - 10) + '" y="' + (targetY - 5) + '" fill="#10b981" text-anchor="end" font-size="10">목표가 (' + item.targetText + ')</text>' +
-                    '<line x1="0" y1="' + stopY + '" x2="' + width + '" y2="' + stopY + '" stroke="#ef4444" stroke-dasharray="4,4" stroke-width="1.5"/>' +
-                    '<text x="' + (width - 10) + '" y="' + (stopY + 12) + '" fill="#ef4444" text-anchor="end" font-size="10">손절선 (' + item.stopText + ')</text>' +
-                    '<path d="' + pathD + '" fill="none" stroke="#3b82f6" stroke-width="3"/>' +
-                    circles +
-                '</svg>';
-        }
-
-        function initApp() {
-            updateTime();
-            setInterval(updateTime, 1000);
-
-            loadStorage();
-            fetchExchangeRate();
-            renderTable();
-
-            var btnScan = document.getElementById('btn-scan');
-            if (btnScan) btnScan.addEventListener('click', function() {
-                fetchExchangeRate();
-                renderTable();
-            });
-            
-            var btnAi = document.getElementById('btn-ai-recommend');
-            if (btnAi) {
-                btnAi.addEventListener('click', function() {
-                    document.getElementById('ticker-input').value = aiRecommendedList.join(' ');
-                    var msgBox = document.getElementById('recommend-msg');
-                    if (msgBox) {
-                        msgBox.classList.remove('hidden');
-                        setTimeout(function() { msgBox.classList.add('hidden'); }, 3000);
-                    }
-                    renderTable();
-                });
-            }
-
-            var btnReset = document.getElementById('btn-reset');
-            if (btnReset) {
-                btnReset.addEventListener('click', function() {
-                    try {
-                        localStorage.removeItem('swing_tickers');
-                        localStorage.removeItem('swing_entries');
-                    } catch(e) {}
-                    document.getElementById('ticker-input').value = 'NVDA AAPL TSLA MSFT AMZN 005930 000660';
-                    renderTable();
-                });
-            }
-
-            var btnCloseChart = document.getElementById('btn-close-chart');
-            if (btnCloseChart) {
-                btnCloseChart.addEventListener('click', function() {
-                    document.getElementById('chart-section').classList.add('hidden');
-                    var rows = document.querySelectorAll('tr[id^="row-"]');
-                    for (var i = 0; i < rows.length; i++) rows[i].classList.remove('selected-row');
-                    selectedTicker = null;
-                });
-            }
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initApp);
-        } else {
-            initApp();
-        }
-    </script>
-</body>
-</html>
+                    <span class="text-red-400 font-bold" id="
