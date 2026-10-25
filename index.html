@@ -204,39 +204,44 @@
             if (el) el.innerText = 'KST ' + now.toLocaleString('ko-KR');
         }
 
-        // Multi-proxy Fallback Fetching System
+        // Multi-channel Fetching Algorithm with Dynamic Proxy Routing
         async function fetchRealTimeQuote(ticker) {
             var symbol = ticker;
             if (/^\d{6}$/.test(ticker)) symbol = ticker + '.KS';
 
             var targetUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + symbol + '?interval=1d&range=5d';
             
-            // Proxy 1: AllOrigins
+            // Route 1: AllOrigins raw
             try {
                 var p1 = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl);
-                var r1 = await fetch(p1);
-                var d1 = await r1.json();
-                if (d1 && d1.chart && d1.chart.result && d1.chart.result[0]) {
-                    var meta1 = d1.chart.result[0].meta;
-                    var cP1 = meta1.regularMarketPrice || meta1.chartPreviousClose;
-                    var pC1 = meta1.chartPreviousClose || meta1.previousClose || cP1;
-                    return { price: cP1, prevClose: pC1 };
+                var r1 = await fetch(p1, { cache: "no-cache" });
+                if (r1.ok) {
+                    var d1 = await r1.json();
+                    if (d1 && d1.chart && d1.chart.result && d1.chart.result[0]) {
+                        var meta1 = d1.chart.result[0].meta;
+                        var cP1 = meta1.regularMarketPrice || meta1.chartPreviousClose;
+                        var pC1 = meta1.chartPreviousClose || meta1.previousClose || cP1;
+                        if (cP1 && cP1 > 0) return { price: cP1, prevClose: pC1 };
+                    }
                 }
             } catch(e) {}
 
-            // Proxy 2: Corsproxy.io
+            // Route 2: Corsproxy
             try {
                 var p2 = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
-                var r2 = await fetch(p2);
-                var d2 = await r2.json();
-                if (d2 && d2.chart && d2.chart.result && d2.chart.result[0]) {
-                    var meta2 = d2.chart.result[0].meta;
-                    var cP2 = meta2.regularMarketPrice || meta2.chartPreviousClose;
-                    var pC2 = meta2.chartPreviousClose || meta2.previousClose || cP2;
-                    return { price: cP2, prevClose: pC2 };
+                var r2 = await fetch(p2, { cache: "no-cache" });
+                if (r2.ok) {
+                    var d2 = await r2.json();
+                    if (d2 && d2.chart && d2.chart.result && d2.chart.result[0]) {
+                        var meta2 = d2.chart.result[0].meta;
+                        var cP2 = meta2.regularMarketPrice || meta2.chartPreviousClose;
+                        var pC2 = meta2.chartPreviousClose || meta2.previousClose || cP2;
+                        if (cP2 && cP2 > 0) return { price: cP2, prevClose: pC2 };
+                    }
                 }
             } catch(e) {}
 
+            // Fallback to local reference
             var base = masterReportDB[ticker];
             if (base) {
                 return { price: base.defaultPrice, prevClose: base.prevClose };
@@ -480,4 +485,76 @@
             var targetY = getY(item.targetNum);
             var stopY = getY(item.stopNum);
 
-            var circles = data.map(
+            var circles = data.map(function(d, i) {
+                var r = i === data.length - 1 ? 5 : 3;
+                var fill = i === data.length - 1 ? '#60a5fa' : '#3b82f6';
+                return '<circle cx="' + getX(i) + '" cy="' + getY(d) + '" r="' + r + '" fill="' + fill + '"/>';
+            }).join('');
+
+            wrapper.innerHTML = 
+                '<svg viewBox="0 0 ' + width + ' ' + height + '" class="w-full h-full overflow-visible">' +
+                    '<line x1="0" y1="' + targetY + '" x2="' + width + '" y2="' + targetY + '" stroke="#10b981" stroke-dasharray="4,4" stroke-width="1.5"/>' +
+                    '<text x="' + (width - 10) + '" y="' + (targetY - 5) + '" fill="#10b981" text-anchor="end" font-size="10">목표가 (' + item.targetText + ')</text>' +
+                    '<line x1="0" y1="' + stopY + '" x2="' + width + '" y2="' + stopY + '" stroke="#ef4444" stroke-dasharray="4,4" stroke-width="1.5"/>' +
+                    '<text x="' + (width - 10) + '" y="' + (stopY + 12) + '" fill="#ef4444" text-anchor="end" font-size="10">손절선 (' + item.stopText + ')</text>' +
+                    '<path d="' + pathD + '" fill="none" stroke="#3b82f6" stroke-width="3"/>' +
+                    circles +
+                '</svg>';
+        }
+
+        function initApp() {
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            loadStorage();
+            updateAllRealTimePrices();
+
+            setInterval(updateAllRealTimePrices, 20000);
+
+            var btnScan = document.getElementById('btn-scan');
+            if (btnScan) btnScan.addEventListener('click', updateAllRealTimePrices);
+            
+            var btnAi = document.getElementById('btn-ai-recommend');
+            if (btnAi) {
+                btnAi.addEventListener('click', function() {
+                    document.getElementById('ticker-input').value = aiRecommendedList.join(' ');
+                    var msgBox = document.getElementById('recommend-msg');
+                    if (msgBox) {
+                        msgBox.classList.remove('hidden');
+                        setTimeout(function() { msgBox.classList.add('hidden'); }, 4000);
+                    }
+                    updateAllRealTimePrices();
+                });
+            }
+
+            var btnReset = document.getElementById('btn-reset');
+            if (btnReset) {
+                btnReset.addEventListener('click', function() {
+                    try {
+                        localStorage.removeItem('swing_tickers');
+                        localStorage.removeItem('swing_entries');
+                    } catch(e) {}
+                    document.getElementById('ticker-input').value = 'NVDA AAPL TSLA MSFT AMZN 005930 000660';
+                    updateAllRealTimePrices();
+                });
+            }
+
+            var btnCloseChart = document.getElementById('btn-close-chart');
+            if (btnCloseChart) {
+                btnCloseChart.addEventListener('click', function() {
+                    document.getElementById('chart-section').classList.add('hidden');
+                    var rows = document.querySelectorAll('tr[id^="row-"]');
+                    for (var i = 0; i < rows.length; i++) rows[i].classList.remove('selected-row');
+                    selectedTicker = null;
+                });
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+    </script>
+</body>
+</html>
