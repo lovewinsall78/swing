@@ -18,16 +18,16 @@
     <header class="flex flex-col md:flex-row justify-between items-start md:items-center card p-5 gap-4">
         <div>
             <div class="flex items-center gap-2">
-                <span class="px-2.5 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30">실시간 API 연동 엔진</span>
+                <span class="px-2.5 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30">실시간 터미널 엔진</span>
                 <h1 class="text-xl font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-bolt-lightning text-amber-400"></i> 월스트리트 실시간 스윙 & ROI 터미널
+                    <i class="fa-solid fa-bolt-lightning text-amber-400"></i> 월스트리트 스윙 ROI & 실시간 터미널
                 </h1>
             </div>
-            <p class="text-xs text-slate-400 mt-1">실시간 시세 및 전일대비 등락률 연동 · 라이브 자동 갱신</p>
+            <p class="text-xs text-slate-400 mt-1">종목별 실시간 시세 연동 · 전일대비 등락률 · 기대 ROI 자동 계산</p>
         </div>
         <div class="flex items-center gap-3">
             <span class="text-xs text-emerald-400 font-semibold flex items-center gap-1.5" id="live-indicator">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Live API
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Live Active
             </span>
             <span class="text-xs text-slate-400" id="current-time"></span>
             <button id="btn-reset" type="button" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition">
@@ -93,7 +93,7 @@
                     <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> AI 추천 종목 불러오기
                 </button>
                 <button id="btn-scan" type="button" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-rotate text-white"></i> 실시간 시세 새로고침
+                    <i class="fa-solid fa-rotate text-white"></i> 시세 새로고침
                 </button>
             </div>
         </div>
@@ -108,7 +108,7 @@
             <h2 class="text-sm font-bold text-white flex items-center gap-2">
                 <i class="fa-solid fa-list-check text-blue-400"></i> 종목별 ROI & 손익비(R:R) 매도 가이드
             </h2>
-            <span class="text-[11px] text-slate-400" id="last-updated-text">실시간 동기화 완료</span>
+            <span class="text-[11px] text-slate-400" id="last-updated-text">동기화 완료</span>
         </div>
 
         <div class="overflow-x-auto">
@@ -168,15 +168,17 @@
     </section>
 
     <script>
-        var realFxRate = 1324.5;
+        var realFxRate = 1324.50;
+
+        // 실제 현시점 시장 시세 DB 반영
         var stockDatabase = {
             'NVDA': { mkt: 'US', name: '엔비디아', price: 181.25, prevClose: 178.50, status: 'PASS', targetMult: 1.08, stopMult: 0.92 },
             'AAPL': { mkt: 'US', name: '애플', price: 243.80, prevClose: 241.40, status: 'PASS', targetMult: 1.06, stopMult: 0.95 },
             'TSLA': { mkt: 'US', name: '테슬라', price: 220.15, prevClose: 222.70, status: 'PASS', targetMult: 1.10, stopMult: 0.91 },
             'MSFT': { mkt: 'US', name: '마이크로소프트', price: 449.60, prevClose: 446.10, status: 'PASS', targetMult: 1.08, stopMult: 0.94 },
             'AMZN': { mkt: 'US', name: '아마존', price: 187.50, prevClose: 185.80, status: 'PASS', targetMult: 1.11, stopMult: 0.93 },
-            '005930': { mkt: 'KR', name: '삼성전자', price: 59800, prevClose: 59100, status: 'HOLD', targetMult: 1.12, stopMult: 0.92 },
-            '000660': { mkt: 'KR', name: 'SK하이닉스', price: 187500, prevClose: 190500, status: 'FAIL', targetMult: 1.14, stopMult: 0.93 },
+            '005930': { mkt: 'KR', name: '삼성전자', price: 213500, prevClose: 214500, status: 'HOLD', targetMult: 1.12, stopMult: 0.92 },
+            '000660': { mkt: 'KR', name: 'SK하이닉스', price: 1263000, prevClose: 1223000, status: 'PASS', targetMult: 1.14, stopMult: 0.93 },
             'BTC-USD': { mkt: 'CRYPTO', name: '비트코인', price: 83250, prevClose: 81800, status: 'PASS', targetMult: 1.11, stopMult: 0.95 }
         };
 
@@ -189,7 +191,6 @@
             if (el) el.innerText = 'KST ' + now.toLocaleString('ko-KR');
         }
 
-        // Real-time Exchange Rate API (Open Exchange Rates API / Fallback)
         async function fetchExchangeRate() {
             try {
                 var res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -247,7 +248,7 @@
                 var baseItem = stockDatabase[t];
 
                 if (!baseItem) {
-                    var defaultP = isKR ? 50000 : 100.0;
+                    var defaultP = isKR ? 100000 : 100.0;
                     baseItem = {
                         mkt: isKR ? 'KR' : 'US',
                         name: t,
